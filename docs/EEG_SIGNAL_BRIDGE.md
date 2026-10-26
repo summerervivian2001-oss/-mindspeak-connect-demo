@@ -5,7 +5,7 @@ The demo does not record brain signals, decode thoughts or communicate with an E
 
 ## Signal contract
 
-When the scan is active, a trusted future input adapter *may* dispatch a browser
+When the scan is active, the manually triggered test button dispatches a browser
 event from within the same page:
 
 ```js
@@ -22,7 +22,7 @@ window.dispatchEvent(new CustomEvent('mindspeak:selection-signal', {
 The timestamp **must use the page's** `performance.now()` time base, not Unix time.
 Do not directly send device timestamps unless first translated to the page clock.
 
-The gate currently accepts only a fresh (< = 500 ms) selection signal with
+The gate currently accepts only `source: 'simulated'`, a fresh (≤ 500 ms) selection signal with
 confidence >= 0.85 during an active scan, and applies a 1200 ms refractory period
 after accepted impulses. A false positive can still select the wrong phrase:
 **confidence threshold is a placeholder, not a calibrated probability or proof
@@ -33,8 +33,7 @@ should trigger a selection.
 The on-page “Simulierten Auswahl-Impuls senden” button dispatches the same
 event, but is *still clicked by hand*. This tests signal-to-UI wiring only.
 Tests show an entry source of `Simulation (manuell)`, never actual EEG.
-When connected to a classifier in the future, distinguish its signal source
-and validate it independently. Never present such an experimental output as
+Unrecognized input sources, including `source: 'eeg'`, are deliberately **blocked** in v0.5. Before enabling actual hardware signals, build and validate a separate adapter with explicit activation. Do not rely on the browser event's `source` string as authentication. Never present such an experimental output as
 a clinically reliable communication or emergency system.
 
 ### Unresolved work before an EEG test
