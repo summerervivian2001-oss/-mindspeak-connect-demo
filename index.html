@@ -83,7 +83,8 @@
   </section>
 
 
-  <section class="panel" aria-labelledby="voice-title">
+  <details class="panel"><summary>Stimmen einstellen (optional, später)</summary>
+  <section aria-labelledby="voice-title">
     <h2 id="voice-title">Eine angenehmere Stimme wählen</h2>
     <p class="small">Zwei Stimmprofile: Du kannst auf deinem Gerät vorhandene deutsche Stimmen zuordnen und anhören. Die Bezeichnungen „weiblich“ und „männlich“ sind Profilnamen – der Browser teilt uns das Geschlecht einer Stimme nicht zuverlässig mit.</p>
     <div class="controls" role="group" aria-label="Stimmprofil auswählen">
@@ -111,6 +112,7 @@
     <button type="button" class="control" id="voice-refresh">Stimmen erneut prüfen</button>
     <p class="small">Falls beide Profile gleich klingen: Dein Browser verwendet möglicherweise dieselbe Systemstimme. Zwei Profilknöpfe erzeugen noch keine männliche oder weibliche Stimme. Zusätzliche Android-Stimmen kannst du unter <strong>Einstellungen → Allgemeine Verwaltung → Text-zu-Sprache</strong> prüfen. Danach die Webseite neu laden.</p>
   </section>
+  </details>
 
   <section class="panel" aria-labelledby="scan-title">
     <h2 id="scan-title">Ein-Tasten-Bedienung</h2>
@@ -147,6 +149,7 @@
     <p class="small">In diesem freiwilligen Techniktest bekommst du zwölf zufällig gemischte Aufgaben (jede Aussage dreimal). Wir erfassen richtige und falsche Auswahlen, Auswahlzeit, Eingabeart und Scans ohne Auswahl. <strong>Während des Tests wird nichts vorgelesen</strong>; keine Auswahl geht in den Kommunikationsverlauf. <strong>Das ist kein Nachweis medizinischer Wirksamkeit.</strong></p>
     <p class="prompt" id="practice-prompt" role="status" aria-live="polite">Noch keine Übung gestartet</p>
     <p class="result" id="practice-result" aria-live="polite">Teste direktes Tippen oder den Ein-Tasten-Scan.</p>
+    <p class="small">Für Vergleichstests bitte einen Durchgang nur per Berührung und einen getrennten Durchgang mit Scan absolvieren. Die Testergebnisse sind eine technische Orientierung, kein klinischer Nachweis.</p>
     <div class="controls">
       <button type="button" class="control primary" id="practice-start">Übung starten</button>
       <button type="button" class="control" id="practice-cancel" disabled>Test abbrechen</button>
@@ -162,7 +165,7 @@
 
   <details>
     <summary>Bedienung und Datenschutz</summary>
-    <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Testergebnisse werden nur gespeichert, wenn du bewusst auf „Ergebnis als CSV speichern“ tippst; dabei entsteht eine Datei auf deinem Gerät ohne Namen oder personenbezogene Angaben. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
+    <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Testergebnisse werden nur gespeichert, wenn du bewusst auf „Ergebnis als CSV speichern“ tippst; dabei entsteht eine Datei auf deinem Gerät ohne Namen und Kontaktdaten. Bitte beachte, dass auch solche Übungsdaten bei Weitergabe sensibel sein können. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
     <p><strong>Wichtig zur Forschung:</strong> Unsere bisherigen PhysioNet-Daten untersuchen die Vorstellung linker/rechter Faustbewegungen, nicht Gedanken oder gesprochene Aussagen. Eine spätere EEG-Steuerung der vier Felder muss zuerst eigenständig validiert werden. Die hier dargestellten Worte werden derzeit ausschließlich über Berührung oder Tastatur ausgewählt.</p>
   </details>
   <footer>MindSpeak Connect · Interaktionsprototyp · Keine medizinische Zweckbestimmung oder Notruffunktion · Für Tests, nicht für die Versorgung.</footer>
