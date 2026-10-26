@@ -1,4 +1,4 @@
-name: MindSpeak 0.7 hybrid logic checks
+name: MindSpeak 0.8 hybrid browser initialization checks
 
 on:
   push:
@@ -26,4 +26,5 @@ jobs:
         with:
           node-version: '22'
       - run: node --check hybrid-input.js
+      - run: node --check word-suggestions.js
       - run: node --test tests/*.test.cjs
