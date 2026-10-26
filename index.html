@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a1827">
   <meta name="description" content="MindSpeak Connect – barrierearme, lokale Kommunikationsdemo ohne EEG-Verbindung">
-  <title>MindSpeak Connect 0.3 · Kommunikationsdemo mit Stimmwahl</title>
+  <title>MindSpeak Connect 0.3.1 · Transparente Browser-Stimmauswahl</title>
   <style>
     :root { color-scheme: dark; --bg:#091725; --panel:#122438; --line:#385069; --text:#f1f7fb; --muted:#c6d6e3; --mint:#8af2d3; --blue:#9ed8ff; --focus:#ffdd7e; }
     * { box-sizing:border-box; }
@@ -55,7 +55,7 @@
 </head>
 <body>
 <main class="wrap" id="main">
-  <div class="eyebrow">MindSpeak · Connect · Version 0.3</div>
+  <div class="eyebrow">MindSpeak · Connect · Version 0.3.1</div>
   <h1>Deine Worte. Deine Entscheidung.</h1>
   <p class="intro">Eine erste barrierearme Kommunikationsoberfläche mit großen Antwortfeldern, optionaler Sprachausgabe und Ein-Tasten-Auswahl. Entwickelt als <strong>Bedienungsdemo</strong> für spätere Tests mit Menschen, die Unterstützung beim Kommunizieren benötigen.</p>
   <div class="warning" role="note"><strong>Wichtig:</strong> Dies ist eine <strong>Demo ohne EEG-Verbindung</strong> und kein geprüftes Hilfsmittel. Die Hilfe-Taste sendet <strong>keinen Notruf</strong>. Verlasse dich in einer Notsituation nicht darauf.</div>
@@ -106,7 +106,10 @@
       </div>
       <button type="button" class="control primary" id="voice-preview">Stimme anhören</button>
     </div>
-    <p class="small" id="voice-status" role="status" aria-live="polite">Deutsche Stimmen werden geladen. Die Auswahl gilt nur für diese Sitzung.</p>
+    <p class="small" id="voice-diagnostics" role="status" aria-live="polite">Prüfe, welche Stimmen auf diesem Handy verfügbar sind.</p>
+    <p class="small" id="voice-status" aria-live="polite">Deutsche Stimmen werden geladen. Die Auswahl gilt nur für diese Sitzung.</p>
+    <button type="button" class="control" id="voice-refresh">Stimmen erneut prüfen</button>
+    <p class="small">Falls beide Profile gleich klingen: Dein Browser verwendet möglicherweise dieselbe Systemstimme. Zwei Profilknöpfe erzeugen noch keine männliche oder weibliche Stimme. Zusätzliche Android-Stimmen kannst du unter <strong>Einstellungen → Allgemeine Verwaltung → Text-zu-Sprache</strong> prüfen. Danach die Webseite neu laden.</p>
   </section>
 
   <section class="panel" aria-labelledby="scan-title">
@@ -218,6 +221,8 @@ class MindSpeakEngine {
   const voiceRate = document.getElementById('voice-rate');
   const voicePreview = document.getElementById('voice-preview');
   const voiceStatus = document.getElementById('voice-status');
+  const voiceDiagnostics = document.getElementById('voice-diagnostics');
+  const voiceRefresh = document.getElementById('voice-refresh');
   const voiceProfiles = { female: null, male: null };
   let currentVoiceProfile = 'female';
   let germanVoices = [];
@@ -264,25 +269,39 @@ class MindSpeakEngine {
     voiceMale.setAttribute('aria-pressed', String(currentVoiceProfile === 'male'));
     voiceFemale.classList.toggle('primary', currentVoiceProfile === 'female');
     voiceMale.classList.toggle('primary', currentVoiceProfile === 'male');
+    const hasSecondVoice = germanVoices.length >= 2;
+    voiceMale.disabled = !hasSecondVoice;
+    voiceMale.textContent = hasSecondVoice ? 'Männliches Profil' : 'Männliches Profil (Stimme fehlt)';
     voiceSelect.value = voiceProfiles[currentVoiceProfile] || '';
     const voice = selectedVoice();
     if (!germanVoices.length) {
       voiceStatus.textContent = 'Der Browser meldet noch keine deutschen Stimmen. Die Hörprobe verwendet, wenn möglich, die Systemstimme.';
+    } else if (germanVoices.length === 1) {
+      voiceStatus.textContent = 'Nur eine deutsche Stimme verfügbar: ' + germanVoices[0].name + '. Damit ist eine getrennte männliche Stimme derzeit nicht möglich.';
     } else if (voice) {
-      voiceStatus.textContent = 'Dieses Profil verwendet: ' + voice.name + '. Hör sie dir an und prüfe, ob sie passend klingt.';
+      voiceStatus.textContent = 'Zugeordnete Stimme: ' + voice.name + '. Bei manchen Geräten können selbst verschiedene Einträge gleich klingen. Bitte mit Hörprobe überprüfen.';
     } else {
-      voiceStatus.textContent = 'Für dieses Profil ist noch keine eigene Stimme ausgewählt. Bis dahin wird die Systemstimme verwendet.';
+      voiceStatus.textContent = 'Dieses Profil hat noch keine andere deutsche Stimme. Wähle eine im Auswahlfeld und höre die Probe an.';
     }
   }
   function loadVoices() {
     if (!('speechSynthesis' in window) || typeof window.speechSynthesis.getVoices !== 'function') {
       voiceStatus.textContent = 'Dieser Browser bietet keine auswählbaren Stimmen an.';
+      voiceDiagnostics.textContent = 'Keine Stimmen über die Browser-Schnittstelle verfügbar.';
+      voiceMale.disabled = true;
       voiceSelect.disabled = true;
       return;
     }
     const list = window.speechSynthesis.getVoices().filter(v => /^de(?:[-_]|$)/i.test(v.lang || ''));
-    germanVoices = list;
-    const previous = voiceProfiles[currentVoiceProfile];
+    germanVoices = [...new Map(list.map(v => [voiceKey(v), v])).values()];
+    voiceDiagnostics.textContent = 'Chrome meldet ' + germanVoices.length + ' deutsche Stimme' + (germanVoices.length === 1 ? '' : 'n') + ': ' + (germanVoices.map(v => v.name).join(', ') || 'keine') + '.';
+    for (const profile of ['female', 'male']) {
+      if (!germanVoices.some(v => voiceKey(v) === voiceProfiles[profile])) voiceProfiles[profile] = null;
+    }
+    if (germanVoices.length < 2) {
+      voiceProfiles.male = null;
+      currentVoiceProfile = 'female';
+    }
     voiceSelect.replaceChildren();
     const placeholder = document.createElement('option');
     placeholder.value = '';
@@ -299,9 +318,6 @@ class MindSpeakEngine {
     if (!voiceProfiles.male && germanVoices.length > 1) {
       const alternative = germanVoices.find(v => voiceKey(v) !== voiceProfiles.female);
       if (alternative) voiceProfiles.male = voiceKey(alternative);
-    }
-    if (previous && !germanVoices.some(v => voiceKey(v) === previous)) {
-      voiceProfiles[currentVoiceProfile] = null;
     }
     renderVoiceControls();
   }
@@ -435,6 +451,7 @@ class MindSpeakEngine {
     renderVoiceControls();
   });
   voiceMale.addEventListener('click', () => {
+    if (voiceMale.disabled) return;
     currentVoiceProfile = 'male';
     renderVoiceControls();
   });
@@ -442,6 +459,7 @@ class MindSpeakEngine {
     voiceProfiles[currentVoiceProfile] = voiceSelect.value || null;
     renderVoiceControls();
   });
+  voiceRefresh.addEventListener('click', loadVoices);
   voicePreview.addEventListener('click', () => {
     speak('Hallo. Ich bin deine Stimme für MindSpeak. Wie kann ich dir helfen?', true);
   });
