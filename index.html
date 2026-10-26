@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a1827">
   <meta name="description" content="MindSpeak Connect – barrierearme, lokale Kommunikationsdemo ohne EEG-Verbindung">
-  <title>MindSpeak Connect 0.4.1 · Sichtbare Testergebnisse</title>
+  <title>MindSpeak Connect 0.5 · EEG-Signale simulieren</title>
   <style>
     :root { color-scheme: dark; --bg:#091725; --panel:#122438; --line:#385069; --text:#f1f7fb; --muted:#c6d6e3; --mint:#8af2d3; --blue:#9ed8ff; --focus:#ffdd7e; }
     * { box-sizing:border-box; }
@@ -64,7 +64,7 @@
 </head>
 <body>
 <main class="wrap" id="main">
-  <div class="eyebrow">MindSpeak · Connect · Version 0.4.1</div>
+  <div class="eyebrow">MindSpeak · Connect · Version 0.5</div>
   <h1>Deine Worte. Deine Entscheidung.</h1>
   <p class="intro">Eine erste barrierearme Kommunikationsoberfläche mit großen Antwortfeldern, optionaler Sprachausgabe und Ein-Tasten-Auswahl. Entwickelt als <strong>Bedienungsdemo</strong> für spätere Tests mit Menschen, die Unterstützung beim Kommunizieren benötigen.</p>
   <div class="warning" role="note"><strong>Wichtig:</strong> Dies ist eine <strong>Demo ohne EEG-Verbindung</strong> und kein geprüftes Hilfsmittel. Die Hilfe-Taste sendet <strong>keinen Notruf</strong>. Verlasse dich in einer Notsituation nicht darauf.</div>
@@ -151,6 +151,12 @@
       <button type="button" class="control big" id="trigger" disabled>Markiertes Feld wählen</button>
     </div>
     <p class="small" id="scan-help">Ohne Scan: Pfeiltasten bewegen die Markierung, Leertaste wählt aus; bei noch keiner Markierung startet die Leertaste den Scan. Tasten 1–4 wählen direkt. Escape beendet den Scan. Ohne Auswahl beendet sich der Scan nach der eingestellten Anzahl Umläufe.</p>
+    <details class="panel" id="signal-lab">
+      <summary>Forschungstest: Auswahl-Impuls simulieren (kein EEG)</summary>
+      <p class="small"><strong>Ohne EEG-Gerät:</strong> Starte den Scan und tippe hier. Die Simulation sendet einen einzelnen Testimpuls durch dieselbe technische Schnittstelle, an die später ein EEG-Klassifikator angeschlossen werden könnte. Es wird weiterhin von Hand getippt, kein Gehirnsignal erkannt.</p>
+      <button type="button" class="control" id="mock-signal">Simulierten Auswahl-Impuls senden</button>
+      <p class="small" id="mock-signal-status" role="status" aria-live="polite">Noch kein simulierter Impuls gesendet.</p>
+    </details>
   </section>
 
   <section class="panel practice" aria-labelledby="practice-title">
@@ -185,7 +191,7 @@
   <details>
     <summary>Bedienung und Datenschutz</summary>
     <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Testergebnisse werden nur gespeichert, wenn du bewusst auf „Testergebnis als CSV herunterladen“ tippst; dabei entsteht eine Datei auf deinem Gerät ohne Namen und Kontaktdaten. Bitte beachte, dass auch solche Übungsdaten bei Weitergabe sensibel sein können. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
-    <p><strong>Wichtig zur Forschung:</strong> Unsere bisherigen PhysioNet-Daten untersuchen die Vorstellung linker/rechter Faustbewegungen, nicht Gedanken oder gesprochene Aussagen. Eine spätere EEG-Steuerung der vier Felder muss zuerst eigenständig validiert werden. Die hier dargestellten Worte werden derzeit ausschließlich über Berührung oder Tastatur ausgewählt.</p>
+    <p><strong>Wichtig zur Forschung:</strong> Unsere bisherigen PhysioNet-Daten untersuchen die Vorstellung linker/rechter Faustbewegungen, nicht Gedanken oder gesprochene Aussagen. Eine spätere EEG-Steuerung der vier Felder muss zuerst eigenständig validiert werden. Die hier dargestellten Worte werden derzeit nur über Berührung, Tastatur oder einen ausdrücklich simulierten Auswahl-Impuls ausgewählt. Es gibt keine EEG-Aufzeichnung oder EEG-Erkennung.</p>
   </details>
   <footer>MindSpeak Connect · Interaktionsprototyp · Keine medizinische Zweckbestimmung oder Notruffunktion · Für Tests, nicht für die Versorgung.</footer>
 </main>
@@ -218,6 +224,7 @@ class MindSpeakEngine {
   undo() { return this.history.shift() ?? null; }
 }
 </script>
+<script src="signal-bridge.js"></script>
 <script>
 (function() {
   'use strict';
@@ -227,6 +234,9 @@ class MindSpeakEngine {
   const trigger = document.getElementById('trigger');
   const speed = document.getElementById('speed');
   const rounds = document.getElementById('rounds');
+  const signalBridge = new MindSpeakSignalBridge();
+  const mockSignalButton = document.getElementById('mock-signal');
+  const mockSignalStatus = document.getElementById('mock-signal-status');
   const status = document.getElementById('status');
   const output = document.getElementById('last-phrase');
   const repeat = document.getElementById('repeat');
@@ -470,6 +480,26 @@ class MindSpeakEngine {
   }
   toggle.addEventListener('click', () => interval === null ? startScan() : stopScan('Scan beendet.'));
   trigger.addEventListener('click', () => { if (interval !== null) choose(engine.index, 'Scan-Bildschirmtaste'); });
+  // A future validated EEG adapter may dispatch this event.
+  // Custom events are NOT authenticated and are not themselves EEG input.
+  window.addEventListener('mindspeak:selection-signal', event => {
+    const data = event.detail;
+    const decision = signalBridge.evaluate(data, performance.now(), interval !== null);
+    if (decision.accepted) {
+      const method = data.source === 'simulated' ? 'Simulation (manuell)' : 'Experimentelles Signal (unvalidiert)';
+      choose(engine.index, method);
+    }
+    if (data && data.source === 'simulated') {
+      mockSignalStatus.textContent = decision.accepted
+        ? 'Testimpuls akzeptiert. Auswahl per Simulationstaste, nicht per EEG.'
+        : 'Testimpuls abgelehnt (' + decision.reason + '). Bitte Scan starten oder erneut versuchen.';
+    }
+  });
+  mockSignalButton.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('mindspeak:selection-signal', {
+      detail: { type: 'select', confidence: 0.95, timestampMs: performance.now(), source: 'simulated' }
+    }));
+  });
   speed.addEventListener('change', changeSpeed);
   rounds.addEventListener('change', changeSpeed);
   practiceStart.addEventListener('click', () => {
