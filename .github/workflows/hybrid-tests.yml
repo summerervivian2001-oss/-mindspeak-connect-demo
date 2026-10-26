@@ -1,4 +1,4 @@
-name: MindSpeak 0.8 hybrid browser initialization checks
+name: MindSpeak hybrid browser scan checks
 
 on:
   push:
@@ -11,6 +11,8 @@ on:
       - tests/word-suggestions.test.cjs
       - word-suggestions.js
       - mindspeak-test-0.8.html
+      - mindspeak-test-0.8.1.html
+      - tests/hybrid-browser-startup.test.cjs
       - .github/workflows/hybrid-tests.yml
 
 permissions:
