@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const html = fs.readFileSync(path.join(__dirname,'../mindspeak-test-0.8.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname,'../mindspeak-test-0.8.1.html'), 'utf8');
 
 class StubElement {
   constructor() {
@@ -110,5 +110,40 @@ test('scan suggestion inserts only text and stays running', () => {
   assert.equal(ids.get('scan-hud').hidden,false, 'scan remains active');
   assert.equal(ids.get('last-message').textContent,'');
   ids.get('hud-stop').click();
+  assert.equal(ids.get('scan-hud').hidden,true);
+});
+
+
+test('dedicated one-switch word scan visibly selects a suggested whole word', () => {
+  const {ids,step}=boot();
+  ids.get('mode-write').click();
+  ids.get('draft').value='ICH M';
+  ids.get('draft').listeners.get('input')();
+  assert.equal(ids.get('suggestion-row').children[0].textContent,'MÖCHTE');
+  const wordScan=ids.get('word-scan-toggle');
+  assert.equal(wordScan.disabled,false);
+  wordScan.click();
+  assert.equal(ids.get('scan-hud').hidden,false);
+  assert.equal(ids.get('scan-phase').textContent,'Wortvorschläge – nächstes Wort wählen');
+  assert.equal(ids.get('scan-current').textContent,'MÖCHTE');
+  assert.equal(ids.get('suggestion-row').children[0].dataset.active,'true');
+  ids.get('hud-choose').click();
+  assert.equal(ids.get('draft').value,'ICH MÖCHTE ');
+  assert.equal(ids.get('scan-hud').hidden,false,'word scan auto-continues');
+  assert.equal(ids.get('last-message').textContent,'','must not speak unrequested');
+  assert.equal(ids.get('scan-current').textContent,'BITTE');
+  step();
+  assert.equal(ids.get('scan-current').textContent,'WASSER');
+  ids.get('hud-stop').click();
+  assert.equal(ids.get('scan-hud').hidden,true);
+});
+test('word scan cannot start if a prefix has no suggestions', () => {
+  const {ids}=boot();
+  ids.get('mode-write').click();
+  ids.get('draft').value='ZZZZ';
+  ids.get('draft').listeners.get('input')();
+  assert.equal(ids.get('suggestion-wrap').hidden,true);
+  assert.equal(ids.get('word-scan-toggle').disabled,true);
+  ids.get('word-scan-toggle').click();
   assert.equal(ids.get('scan-hud').hidden,true);
 });
