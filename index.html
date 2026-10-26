@@ -486,8 +486,7 @@ class MindSpeakEngine {
     const data = event.detail;
     const decision = signalBridge.evaluate(data, performance.now(), interval !== null);
     if (decision.accepted) {
-      const method = data.source === 'simulated' ? 'Simulation (manuell)' : 'Experimentelles Signal (unvalidiert)';
-      choose(engine.index, method);
+      choose(engine.index, 'Simulation (manuell)');
     }
     if (data && data.source === 'simulated') {
       mockSignalStatus.textContent = decision.accepted
