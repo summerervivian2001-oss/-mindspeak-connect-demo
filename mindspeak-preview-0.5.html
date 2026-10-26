@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1827">
+  <meta name="description" content="MindSpeak Connect – barrierearme, lokale Kommunikationsdemo ohne EEG-Verbindung">
+  <title>MindSpeak Connect 0.5 · Offline-Test ohne EEG</title>
+  <style>
+    :root { color-scheme: dark; --bg:#091725; --panel:#122438; --line:#385069; --text:#f1f7fb; --muted:#c6d6e3; --mint:#8af2d3; --blue:#9ed8ff; --focus:#ffdd7e; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height:1.45; }
+    button, select { font:inherit; }
+    button { cursor:pointer; }
+    button:focus-visible, select:focus-visible { outline:4px solid var(--focus); outline-offset:3px; }
+    .wrap { width:min(1050px,100%); margin:0 auto; padding:clamp(16px,4vw,36px); }
+    .eyebrow { font-size:.78rem; color:var(--mint); letter-spacing:.13em; text-transform:uppercase; font-weight:750; }
+    h1 { line-height:1.1; margin:.35rem 0 .65rem; font-size:clamp(1.9rem,6vw,3.6rem); }
+    .intro { margin:0 0 1.1rem; font-size:clamp(1rem,2vw,1.14rem); color:var(--muted); max-width:850px; }
+    .warning { background:#243038; border:2px solid #b9a166; border-radius:13px; padding:11px 14px; font-size:.96rem; margin:16px 0 22px; }
+    .small { font-size:.88rem; color:var(--muted); }
+    h2 { font-size:1.15rem; margin:.25rem 0 .6rem; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(9px,2vw,18px); margin:14px 0 18px; }
+    .tile { appearance:none; border:3px solid var(--line); background:var(--panel); color:var(--text); border-radius:20px; min-height:clamp(130px,24vh,240px); display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; padding:14px 8px; transition:background-color .15s,border-color .15s; font-weight:800; }
+    .tile .sign { font-size:clamp(2rem,5vw,3.6rem); line-height:1; }
+    .tile .phrase { font-size:clamp(1.25rem,3.4vw,2.25rem); line-height:1.17; text-align:center; }
+    .tile .key { font-size:.86rem; color:var(--muted); font-weight:450; }
+    .tile[data-active="true"] { border-color:var(--focus); box-shadow:inset 0 0 0 3px var(--focus); background:#254057; }
+    .tile:hover { border-color:var(--mint); }
+    .tile[data-active="true"]:hover { border-color:var(--focus); }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:18px; margin:16px 0; }
+    .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+    .control { background:#2a4058; color:var(--text); border:2px solid #7795b2; border-radius:12px; min-height:52px; padding:9px 16px; font-weight:700; }
+    .control.primary { background:var(--mint); border-color:var(--mint); color:#071c22; }
+    .control.big { min-height:62px; font-size:1.1rem; }
+    .control:disabled { opacity:.5; cursor:not-allowed; }
+    select { color:var(--text); background:#152a40; border:2px solid #9db7cf; border-radius:10px; padding:11px; min-height:52px; }
+    label { display:block; margin:0 0 6px; font-weight:700; }
+    .output { display:flex; align-items:center; gap:15px; background:#172f3a; padding:16px; border-radius:12px; border:1px solid var(--mint); min-height:94px; }
+    #last-phrase { font-size:clamp(1.25rem,4vw,2rem); font-weight:800; word-break:break-word; }
+    .output-icon { font-size:2rem; }
+    #status { color:var(--muted); min-height:25px; margin:8px 0 0; }
+    .practice { border-color:#b6c3ee; }
+    [hidden] { display:none!important; }
+    .test-summary { margin:18px 0; padding:18px; border:2px solid var(--mint); border-radius:16px; background:#15363b; }
+    .test-summary h3 { font-size:clamp(1.4rem,5vw,1.95rem); margin:0 0 12px; color:var(--mint); }
+    .test-summary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0; }
+    .test-metric { border:1px solid #739b9a; background:#122d32; border-radius:10px; padding:12px; }
+    .test-metric strong { font-size:clamp(1.45rem,5vw,2.1rem); display:block; line-height:1.2; color:#fff; }
+    .test-metric span { font-size:.88rem; color:var(--muted); display:block; margin-top:4px; }
+    .test-summary .control { width:100%; margin-top:6px; }
+    .test-summary .small { color:#d5eae8; }
+    .prompt { font-size:clamp(1.25rem,4vw,1.9rem); font-weight:800; padding:15px; background:#263a51; border-radius:10px; min-height:69px; }
+    .result { padding:12px 0; font-weight:650; }
+    .history { margin:0; padding-left:25px; }
+    .history li { padding:4px 0; }
+    details { color:var(--muted); margin:20px 0; }
+    details summary { color:var(--text); cursor:pointer; font-weight:750; }
+    a { color:var(--blue); }
+    footer { color:var(--muted); font-size:.86rem; padding:10px 0 30px; }
+    @media(max-width:420px) { .tile { min-height:125px; }.tile .phrase { font-size:1.2rem; } .controls .control { flex-grow:1; } }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after {transition:none!important;scroll-behavior:auto!important;} }
+  </style>
+</head>
+<body>
+<main class="wrap" id="main">
+  <div class="eyebrow">MindSpeak · Connect · Version 0.5</div>
+  <h1>Deine Worte. Deine Entscheidung.</h1>
+  <p class="intro">Eine erste barrierearme Kommunikationsoberfläche mit großen Antwortfeldern, optionaler Sprachausgabe und Ein-Tasten-Auswahl. Entwickelt als <strong>Bedienungsdemo</strong> für spätere Tests mit Menschen, die Unterstützung beim Kommunizieren benötigen.</p>
+  <div class="warning" role="note"><strong>Wichtig:</strong> Dies ist eine <strong>Demo ohne EEG-Verbindung</strong> und kein geprüftes Hilfsmittel. Die Hilfe-Taste sendet <strong>keinen Notruf</strong>. Verlasse dich in einer Notsituation nicht darauf.</div>
+
+  <section aria-labelledby="choose-title">
+    <h2 id="choose-title">Was möchtest du sagen?</h2>
+    <div class="grid" id="choices" role="group" aria-label="Vier Aussagen zur Auswahl">
+      <button type="button" class="tile" data-choice="0" data-active="false" aria-label="Ja auswählen, Taste 1"><span class="sign" aria-hidden="true">✓</span><span class="phrase">Ja</span><span class="key">Taste 1</span></button>
+      <button type="button" class="tile" data-choice="1" data-active="false" aria-label="Nein auswählen, Taste 2"><span class="sign" aria-hidden="true">✕</span><span class="phrase">Nein</span><span class="key">Taste 2</span></button>
+      <button type="button" class="tile" data-choice="2" data-active="false" aria-label="Bitte helfen auswählen, Taste 3"><span class="sign" aria-hidden="true">!</span><span class="phrase">Bitte helfen</span><span class="key">Taste 3</span></button>
+      <button type="button" class="tile" data-choice="3" data-active="false" aria-label="Ich brauche eine Pause auswählen, Taste 4"><span class="sign" aria-hidden="true">◷</span><span class="phrase">Ich brauche eine Pause</span><span class="key">Taste 4</span></button>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="message-title">
+    <h2 id="message-title">Ausgewählte Aussage</h2>
+    <div class="output" role="status" aria-live="polite" aria-atomic="true"><span class="output-icon" aria-hidden="true">▣</span><span id="last-phrase">Noch keine Aussage gewählt</span></div>
+    <p id="status" aria-live="polite">Direkt auf ein Feld tippen – oder die Ein-Tasten-Bedienung einschalten.</p>
+    <div class="controls">
+      <button type="button" class="control" id="repeat" disabled>Erneut vorlesen</button>
+      <button type="button" class="control" id="undo" disabled>Letzte Auswahl zurücknehmen</button>
+      <button type="button" class="control" id="toggle-speech" aria-pressed="true">Sprachausgabe: An</button>
+      <button type="button" class="control" id="stop-speech">Vorlesen stoppen</button>
+    </div>
+  </section>
+
+
+  <details class="panel"><summary>Stimmen einstellen (optional, später)</summary>
+  <section aria-labelledby="voice-title">
+    <h2 id="voice-title">Eine angenehmere Stimme wählen</h2>
+    <p class="small">Zwei Stimmprofile: Du kannst auf deinem Gerät vorhandene deutsche Stimmen zuordnen und anhören. Die Bezeichnungen „weiblich“ und „männlich“ sind Profilnamen – der Browser teilt uns das Geschlecht einer Stimme nicht zuverlässig mit.</p>
+    <div class="controls" role="group" aria-label="Stimmprofil auswählen">
+      <button type="button" class="control primary" id="voice-female" aria-pressed="true">Weibliches Profil</button>
+      <button type="button" class="control" id="voice-male" aria-pressed="false">Männliches Profil</button>
+    </div>
+    <div class="controls" style="margin-top:14px">
+      <div>
+        <label for="voice-select">Deutsche Stimme für dieses Profil</label>
+        <select id="voice-select"><option value="">Systemstimme (nicht zugeordnet)</option></select>
+      </div>
+      <div>
+        <label for="voice-rate">Sprechtempo</label>
+        <select id="voice-rate">
+          <option value="0.85">Sehr ruhig</option>
+          <option value="0.95" selected>Sanft / normal</option>
+          <option value="1.05">Normal / zügig</option>
+          <option value="1.15">Etwas schneller</option>
+        </select>
+      </div>
+      <button type="button" class="control primary" id="voice-preview">Stimme anhören</button>
+    </div>
+    <p class="small" id="voice-diagnostics" role="status" aria-live="polite">Prüfe, welche Stimmen auf diesem Handy verfügbar sind.</p>
+    <p class="small" id="voice-status" aria-live="polite">Deutsche Stimmen werden geladen. Die Auswahl gilt nur für diese Sitzung.</p>
+    <button type="button" class="control" id="voice-refresh">Stimmen erneut prüfen</button>
+    <p class="small">Falls beide Profile gleich klingen: Dein Browser verwendet möglicherweise dieselbe Systemstimme. Zwei Profilknöpfe erzeugen noch keine männliche oder weibliche Stimme. Zusätzliche Android-Stimmen kannst du unter <strong>Einstellungen → Allgemeine Verwaltung → Text-zu-Sprache</strong> prüfen. Danach die Webseite neu laden.</p>
+  </section>
+  </details>
+
+  <section class="panel" aria-labelledby="scan-title">
+    <h2 id="scan-title">Ein-Tasten-Bedienung</h2>
+    <p class="small">Für externe Taster, die als <strong>Leertaste</strong> erkannt werden: Bei freiem Tastaturfokus startet die erste Betätigung den Scan. Das gelb markierte Feld wandert weiter; die nächste Betätigung wählt es aus. <strong>Es wird nie automatisch eine Aussage abgesendet.</strong></p>
+    <div class="controls">
+      <button type="button" class="control primary" id="scan-toggle" aria-pressed="false">Scan starten</button>
+      <div>
+        <label for="speed">Zeit pro Feld</label>
+        <select id="speed">
+          <option value="1000">1 Sekunde</option>
+          <option value="1500">1,5 Sekunden</option>
+          <option value="2000" selected>2 Sekunden</option>
+          <option value="3000">3 Sekunden</option>
+          <option value="4500">4,5 Sekunden</option>
+          <option value="6000">6 Sekunden</option>
+        </select>
+      </div>
+      <div>
+        <label for="rounds">Automatisch stoppen nach</label>
+        <select id="rounds">
+          <option value="1">1 Umlauf</option>
+          <option value="2">2 Umläufe</option>
+          <option value="3" selected>3 Umläufe</option>
+          <option value="0">Ohne Zeitlimit</option>
+        </select>
+      </div>
+      <button type="button" class="control big" id="trigger" disabled>Markiertes Feld wählen</button>
+    </div>
+    <p class="small" id="scan-help">Ohne Scan: Pfeiltasten bewegen die Markierung, Leertaste wählt aus; bei noch keiner Markierung startet die Leertaste den Scan. Tasten 1–4 wählen direkt. Escape beendet den Scan. Ohne Auswahl beendet sich der Scan nach der eingestellten Anzahl Umläufe.</p>
+    <details class="panel" id="signal-lab">
+      <summary>Forschungstest: Auswahl-Impuls simulieren (kein EEG)</summary>
+      <p class="small"><strong>Ohne EEG-Gerät:</strong> Starte den Scan und tippe hier. Die Simulation sendet einen einzelnen Testimpuls durch dieselbe technische Schnittstelle, an die später ein EEG-Klassifikator angeschlossen werden könnte. Es wird weiterhin von Hand getippt, kein Gehirnsignal erkannt.</p>
+      <button type="button" class="control" id="mock-signal">Simulierten Auswahl-Impuls senden</button>
+      <p class="small" id="mock-signal-status" role="status" aria-live="polite">Noch kein simulierter Impuls gesendet.</p>
+    </details>
+  </section>
+
+  <section class="panel practice" aria-labelledby="practice-title">
+    <h2 id="practice-title">Bedienung prüfen – 12 gemischte Aufgaben</h2>
+    <p class="small">In diesem freiwilligen Techniktest bekommst du zwölf zufällig gemischte Aufgaben (jede Aussage dreimal). Wir erfassen richtige und falsche Auswahlen, Auswahlzeit, Eingabeart und Scans ohne Auswahl. <strong>Während des Tests wird nichts vorgelesen</strong>; keine Auswahl geht in den Kommunikationsverlauf. <strong>Das ist kein Nachweis medizinischer Wirksamkeit.</strong></p>
+    <p class="prompt" id="practice-prompt" role="status" aria-live="polite">Noch keine Übung gestartet</p>
+    <p class="result" id="practice-result" aria-live="polite">Teste direktes Tippen oder den Ein-Tasten-Scan.</p>
+    <section class="test-summary" id="practice-summary" aria-labelledby="practice-summary-title" hidden tabindex="-1">
+      <h3 id="practice-summary-title">Dein Testergebnis</h3>
+      <div class="test-summary-grid">
+        <div class="test-metric"><strong id="practice-score">–</strong><span>Richtige von 12 Aufgaben</span></div>
+        <div class="test-metric"><strong id="practice-time">–</strong><span>Median pro abgegebener Auswahl</span></div>
+        <div class="test-metric"><strong id="practice-errors">–</strong><span>Falsche Auswahlen</span></div>
+        <div class="test-metric"><strong id="practice-missed">–</strong><span>Scans ohne Auswahl</span></div>
+      </div>
+      <p class="small">Das ist ein Bedienungstest ohne EEG. Speichere bei Bedarf die Einzelwerte oder mache einen Screenshot dieses Ergebnisses.</p>
+      <button type="button" class="control primary" id="practice-export" disabled>Testergebnis als CSV herunterladen</button>
+    </section>
+    <p class="small">Für Vergleichstests bitte einen Durchgang nur per Berührung und einen getrennten Durchgang mit Scan absolvieren. Die Testergebnisse sind eine technische Orientierung, kein klinischer Nachweis.</p>
+    <div class="controls">
+      <button type="button" class="control primary" id="practice-start">Übung starten</button>
+      <button type="button" class="control" id="practice-cancel" disabled>Test abbrechen</button>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="history-title">
+    <h2 id="history-title">Letzte Aussagen <span class="small">(nur in dieser Sitzung)</span></h2>
+    <ol id="history" class="history" aria-label="Die letzten fünf ausgewählten Aussagen"><li>Noch keine</li></ol>
+    <div class="controls" style="margin-top:14px"><button type="button" class="control" id="clear-history">Verlauf löschen</button></div>
+  </section>
+
+  <details>
+    <summary>Bedienung und Datenschutz</summary>
+    <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Testergebnisse werden nur gespeichert, wenn du bewusst auf „Testergebnis als CSV herunterladen“ tippst; dabei entsteht eine Datei auf deinem Gerät ohne Namen und Kontaktdaten. Bitte beachte, dass auch solche Übungsdaten bei Weitergabe sensibel sein können. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
+    <p><strong>Wichtig zur Forschung:</strong> Unsere bisherigen PhysioNet-Daten untersuchen die Vorstellung linker/rechter Faustbewegungen, nicht Gedanken oder gesprochene Aussagen. Eine spätere EEG-Steuerung der vier Felder muss zuerst eigenständig validiert werden. Die hier dargestellten Worte werden derzeit nur über Berührung, Tastatur oder einen ausdrücklich simulierten Auswahl-Impuls ausgewählt. Es gibt keine EEG-Aufzeichnung oder EEG-Erkennung.</p>
+  </details>
+  <footer>MindSpeak Connect · Interaktionsprototyp · Keine medizinische Zweckbestimmung oder Notruffunktion · Für Tests, nicht für die Versorgung.</footer>
+</main>
+<script id="mindspeak-engine">
+/* Pure interaction rules – separated from speech, DOM and research EEG models. */
+class MindSpeakEngine {
+  constructor(phrases = ['Ja', 'Nein', 'Bitte helfen', 'Ich brauche eine Pause']) {
+    if (!Array.isArray(phrases) || phrases.length < 2 || phrases.some(p => typeof p !== 'string' || !p.trim())) {
+      throw new TypeError('At least two valid phrases required');
+    }
+    this.phrases = phrases.slice();
+    this.index = 0;
+    this.history = [];
+  }
+  current() { return this.phrases[this.index]; }
+  next() { this.index = (this.index + 1) % this.phrases.length; return this.current(); }
+  previous() { this.index = (this.index + this.phrases.length - 1) % this.phrases.length; return this.current(); }
+  setIndex(value) {
+    if (!Number.isInteger(value) || value < 0 || value >= this.phrases.length) throw new RangeError('Invalid choice');
+    this.index = value;
+    return this.current();
+  }
+  select(value = this.index) {
+    const phrase = this.setIndex(value);
+    this.history.unshift(phrase);
+    this.history.length = Math.min(this.history.length, 5);
+    return phrase;
+  }
+  clearHistory() { this.history = []; }
+  undo() { return this.history.shift() ?? null; }
+}
+</script>
+<script>
+/* MindSpeak research adapter: validated selection impulses, NOT raw EEG. */
+(function (root) {
+  'use strict';
+
+  class MindSpeakSignalBridge {
+    constructor({ minConfidence = 0.85, maxAgeMs = 500, refractoryMs = 1200 } = {}) {
+      if (!(minConfidence >= 0 && minConfidence <= 1) ||
+          !(maxAgeMs > 0) || !(refractoryMs >= 0)) {
+        throw new RangeError('Invalid signal gate configuration');
+      }
+      this.minConfidence = minConfidence;
+      this.maxAgeMs = maxAgeMs;
+      this.refractoryMs = refractoryMs;
+      this.lastAcceptedAt = -Infinity;
+    }
+
+    evaluate(signal, nowMs, scanActive) {
+      if (!scanActive) return { accepted: false, reason: 'scan-inactive' };
+      if (!Number.isFinite(nowMs) || !signal || signal.type !== 'select' ||
+          !Number.isFinite(signal.confidence) ||
+          signal.confidence < 0 || signal.confidence > 1 ||
+          !Number.isFinite(signal.timestampMs)) {
+        return { accepted: false, reason: 'invalid-signal' };
+      }
+      // Safety: only the manually generated test impulse is supported in v0.5.
+      // Real hardware requires an explicit, validated adapter and activation step.
+      if (signal.source !== 'simulated') {
+        return { accepted: false, reason: 'unsupported-source' };
+      }
+      if (signal.confidence < this.minConfidence) {
+        return { accepted: false, reason: 'low-confidence' };
+      }
+      const ageMs = nowMs - signal.timestampMs;
+      if (ageMs < 0 || ageMs > this.maxAgeMs) {
+        return { accepted: false, reason: 'stale-or-future' };
+      }
+      if (nowMs - this.lastAcceptedAt < this.refractoryMs) {
+        return { accepted: false, reason: 'refractory-period' };
+      }
+      this.lastAcceptedAt = nowMs;
+      return { accepted: true, reason: 'accepted' };
+    }
+  }
+
+  // Browser script and Node's built-in test runner share the same pure logic.
+  root.MindSpeakSignalBridge = MindSpeakSignalBridge;
+  if (typeof module === 'object' && module.exports) {
+    module.exports = { MindSpeakSignalBridge };
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(function() {
+  'use strict';
+  const engine = new MindSpeakEngine();
+  const tiles = [...document.querySelectorAll('.tile')];
+  const toggle = document.getElementById('scan-toggle');
+  const trigger = document.getElementById('trigger');
+  const speed = document.getElementById('speed');
+  const rounds = document.getElementById('rounds');
+  const signalBridge = new MindSpeakSignalBridge();
+  const mockSignalButton = document.getElementById('mock-signal');
+  const mockSignalStatus = document.getElementById('mock-signal-status');
+  const status = document.getElementById('status');
+  const output = document.getElementById('last-phrase');
+  const repeat = document.getElementById('repeat');
+  const history = document.getElementById('history');
+  const stopSpeech = document.getElementById('stop-speech');
+  const undo = document.getElementById('undo');
+  const practiceStart = document.getElementById('practice-start');
+  const practiceCancel = document.getElementById('practice-cancel');
+  const practicePrompt = document.getElementById('practice-prompt');
+  const practiceResult = document.getElementById('practice-result');
+  const practiceSummary = document.getElementById('practice-summary');
+  const practiceScore = document.getElementById('practice-score');
+  const practiceTime = document.getElementById('practice-time');
+  const practiceErrors = document.getElementById('practice-errors');
+  const practiceMissed = document.getElementById('practice-missed');
+  const practiceExport = document.getElementById('practice-export');
+  const speechToggle = document.getElementById('toggle-speech');
+  const voiceFemale = document.getElementById('voice-female');
+  const voiceMale = document.getElementById('voice-male');
+  const voiceSelect = document.getElementById('voice-select');
+  const voiceRate = document.getElementById('voice-rate');
+  const voicePreview = document.getElementById('voice-preview');
+  const voiceStatus = document.getElementById('voice-status');
+  const voiceDiagnostics = document.getElementById('voice-diagnostics');
+  const voiceRefresh = document.getElementById('voice-refresh');
+  const voiceProfiles = { female: null, male: null };
+  let currentVoiceProfile = 'female';
+  let germanVoices = [];
+
+  let speechEnabled = true;
+  let interval = null;
+  let last = null;
+  let highlight = false;
+  let scanCycles = 0;
+  let practice = null;
+  let finishedPractice = null;
+  function makeTrainingOrder() {
+    const order = [0,1,2,3,0,1,2,3,0,1,2,3];
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return order;
+  }
+  function renderTiles() {
+    tiles.forEach((el, idx) => {
+      const active = highlight && engine.index === idx;
+      el.dataset.active = String(active);
+      if (active) el.setAttribute('aria-current', 'true');
+      else el.removeAttribute('aria-current');
+    });
+  }
+  function renderHistory() {
+    undo.disabled = engine.history.length === 0;
+    history.replaceChildren();
+    if (!engine.history.length) {
+      const li = document.createElement('li');
+      li.textContent = 'Noch keine';
+      history.appendChild(li);
+    } else {
+      for (const phrase of engine.history) {
+        const li = document.createElement('li');
+        li.textContent = phrase;
+        history.appendChild(li);
+      }
+    }
+  }
+  function voiceKey(voice) {
+    return [voice.name, voice.lang, voice.voiceURI].join(' | ');
+  }
+  function selectedVoice() {
+    const key = voiceProfiles[currentVoiceProfile];
+    return germanVoices.find(v => voiceKey(v) === key) || null;
+  }
+  function renderVoiceControls() {
+    voiceFemale.setAttribute('aria-pressed', String(currentVoiceProfile === 'female'));
+    voiceMale.setAttribute('aria-pressed', String(currentVoiceProfile === 'male'));
+    voiceFemale.classList.toggle('primary', currentVoiceProfile === 'female');
+    voiceMale.classList.toggle('primary', currentVoiceProfile === 'male');
+    const hasSecondVoice = germanVoices.length >= 2;
+    voiceMale.disabled = !hasSecondVoice;
+    voiceMale.textContent = hasSecondVoice ? 'Männliches Profil' : 'Männliches Profil (Stimme fehlt)';
+    voiceSelect.value = voiceProfiles[currentVoiceProfile] || '';
+    const voice = selectedVoice();
+    if (!germanVoices.length) {
+      voiceStatus.textContent = 'Der Browser meldet noch keine deutschen Stimmen. Die Hörprobe verwendet, wenn möglich, die Systemstimme.';
+    } else if (germanVoices.length === 1) {
+      voiceStatus.textContent = 'Nur eine deutsche Stimme verfügbar: ' + germanVoices[0].name + '. Damit ist eine getrennte männliche Stimme derzeit nicht möglich.';
+    } else if (voice) {
+      voiceStatus.textContent = 'Zugeordnete Stimme: ' + voice.name + '. Bei manchen Geräten können selbst verschiedene Einträge gleich klingen. Bitte mit Hörprobe überprüfen.';
+    } else {
+      voiceStatus.textContent = 'Dieses Profil hat noch keine andere deutsche Stimme. Wähle eine im Auswahlfeld und höre die Probe an.';
+    }
+  }
+  function loadVoices() {
+    if (!('speechSynthesis' in window) || typeof window.speechSynthesis.getVoices !== 'function') {
+      voiceStatus.textContent = 'Dieser Browser bietet keine auswählbaren Stimmen an.';
+      voiceDiagnostics.textContent = 'Keine Stimmen über die Browser-Schnittstelle verfügbar.';
+      voiceMale.disabled = true;
+      voiceSelect.disabled = true;
+      return;
+    }
+    const list = window.speechSynthesis.getVoices().filter(v => /^de(?:[-_]|$)/i.test(v.lang || ''));
+    germanVoices = [...new Map(list.map(v => [voiceKey(v), v])).values()];
+    voiceDiagnostics.textContent = 'Chrome meldet ' + germanVoices.length + ' deutsche Stimme' + (germanVoices.length === 1 ? '' : 'n') + ': ' + (germanVoices.map(v => v.name).join(', ') || 'keine') + '.';
+    for (const profile of ['female', 'male']) {
+      if (!germanVoices.some(v => voiceKey(v) === voiceProfiles[profile])) voiceProfiles[profile] = null;
+    }
+    if (germanVoices.length < 2) {
+      voiceProfiles.male = null;
+      currentVoiceProfile = 'female';
+    }
+    voiceSelect.replaceChildren();
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Systemstimme / noch keine Zuordnung';
+    voiceSelect.appendChild(placeholder);
+    for (const voice of germanVoices) {
+      const option = document.createElement('option');
+      option.value = voiceKey(voice);
+      option.textContent = voice.name + ' (' + voice.lang + ')';
+      voiceSelect.appendChild(option);
+    }
+    // Suggest two different voices when available; these are NOT gender labels.
+    if (!voiceProfiles.female && germanVoices.length) voiceProfiles.female = voiceKey(germanVoices[0]);
+    if (!voiceProfiles.male && germanVoices.length > 1) {
+      const alternative = germanVoices.find(v => voiceKey(v) !== voiceProfiles.female);
+      if (alternative) voiceProfiles.male = voiceKey(alternative);
+    }
+    renderVoiceControls();
+  }
+  function speak(text, isPreview = false) {
+    if (!speechEnabled && !isPreview) return;
+    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+      status.textContent = 'Die Sprachausgabe wird von diesem Browser nicht unterstützt. Die Aussage wird sichtbar angezeigt.';
+      return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = selectedVoice();
+      if (voice) utterance.voice = voice;
+      utterance.lang = voice ? voice.lang : 'de-DE';
+      utterance.rate = Number(voiceRate.value);
+      utterance.pitch = 1.0; // Do not simulate gender by distorting pitch.
+      utterance.volume = 0.92;
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      status.textContent = 'Die Sprachausgabe ist auf diesem Gerät derzeit nicht verfügbar.';
+    }
+  }
+  function stopScan(message) {
+    if (interval !== null) window.clearInterval(interval);
+    interval = null;
+    toggle.textContent = 'Scan starten';
+    toggle.setAttribute('aria-pressed', 'false');
+    trigger.disabled = true;
+    highlight = false;
+    renderTiles();
+    if (message) status.textContent = message;
+  }
+  function recordPractice(index, method) {
+    if (practice === null) return;
+    const target = practice.order[practice.step];
+    const seconds = Math.max(0, performance.now() - practice.started) / 1000;
+    const correct = index !== null && index === target;
+    const selected = index === null ? null : engine.setIndex(index);
+    practice.results.push({ step: practice.step + 1, target, selected: index, seconds, method, correct });
+    stopScan();
+    practice.step++;
+    if (practice.step >= practice.order.length) {
+      const results = practice.results.slice();
+      const correctCount = results.filter(r => r.correct).length;
+      const attempts = results.filter(r => r.selected !== null);
+      const missed = results.length - attempts.length;
+      const times = attempts.map(r => r.seconds).sort((a,b) => a-b);
+      const half = Math.floor(times.length / 2);
+      const median = times.length ? (times.length % 2 ? times[half] : (times[half-1] + times[half]) / 2) : null;
+      const byMethod = [...new Set(attempts.map(r => r.method))].map(method => method + ': ' + attempts.filter(r => r.method === method).length).join(', ');
+      practicePrompt.textContent = 'Test abgeschlossen – Ergebnis direkt darunter';
+      practiceSummary.hidden = false;
+      practiceScore.textContent = correctCount + ' / ' + results.length;
+      practiceTime.textContent = median === null ? '–' : median.toFixed(1) + ' s';
+      practiceErrors.textContent = String(attempts.length - correctCount);
+      practiceMissed.textContent = String(missed);
+      practiceResult.textContent = correctCount + ' von ' + results.length + ' richtig; ' + missed + ' Scans ohne Auswahl. ' +
+        (median === null ? 'Keine Auswahlzeit messbar.' : 'Median pro abgegebener Auswahl: ' + median.toFixed(1) + ' Sekunden.') +
+        ' Eingaben: ' + (byMethod || 'keine') + '. Kein EEG-Test und kein medizinischer Wirksamkeitsnachweis.';
+      finishedPractice = results;
+      practice = null;
+      practiceExport.disabled = false;
+      practiceCancel.disabled = true;
+      practiceStart.textContent = 'Test wiederholen';
+      practiceSummary.scrollIntoView({behavior:'auto',block:'center'});
+    } else {
+      practice.started = performance.now();
+      practicePrompt.textContent = 'Aufgabe ' + (practice.step + 1) + ' von ' + practice.order.length + ': „' + engine.phrases[practice.order[practice.step]] + '“ wählen';
+      practiceResult.textContent = index === null ? 'Keine Auswahl im letzten Scan. Nächste Aufgabe.' : 'Letzte Auswahl: ' + selected + (correct ? ' – richtig.' : ' – andere Aussage gewählt.');
+    }
+  }
+  function choose(index = engine.index, method = 'Touch') {
+    if (practice !== null) {
+      recordPractice(index, method);
+      return;
+    }
+    const phrase = engine.select(index);
+    last = phrase;
+    output.textContent = phrase;
+    repeat.disabled = false;
+    renderHistory();
+    stopScan();
+    status.textContent = 'Aussage gewählt. Du kannst erneut eine Aussage wählen.';
+    speak(phrase);
+  }
+  function startScan() {
+    if (interval !== null) return;
+    engine.setIndex(0);
+    scanCycles = 0;
+    highlight = true;
+    renderTiles();
+    toggle.textContent = 'Scan stoppen';
+    toggle.setAttribute('aria-pressed', 'true');
+    trigger.disabled = false;
+    status.textContent = 'Ein-Tasten-Scan aktiv. Leertaste oder „Markiertes Feld wählen“ zur Auswahl.';
+    if (typeof toggle.blur === 'function') toggle.blur();
+    interval = window.setInterval(() => {
+      engine.next();
+      renderTiles();
+      if (engine.index === 0) {
+        scanCycles++;
+        const limit = Number(rounds.value);
+        if (limit > 0 && scanCycles >= limit) {
+          stopScan('Scan automatisch beendet, ohne eine Aussage auszuwählen.');
+          if (practice !== null) recordPractice(null, 'Scan ohne Auswahl');
+        }
+      }
+    }, Number(speed.value));
+  }
+  function changeSpeed() {
+    if (interval !== null) { stopScan(); startScan(); }
+  }
+  toggle.addEventListener('click', () => interval === null ? startScan() : stopScan('Scan beendet.'));
+  trigger.addEventListener('click', () => { if (interval !== null) choose(engine.index, 'Scan-Bildschirmtaste'); });
+  // A future validated EEG adapter may dispatch this event.
+  // Custom events are NOT authenticated and are not themselves EEG input.
+  window.addEventListener('mindspeak:selection-signal', event => {
+    const data = event.detail;
+    const decision = signalBridge.evaluate(data, performance.now(), interval !== null);
+    if (decision.accepted) {
+      choose(engine.index, 'Simulation (manuell)');
+    }
+    if (data && data.source === 'simulated') {
+      mockSignalStatus.textContent = decision.accepted
+        ? 'Testimpuls akzeptiert. Auswahl per Simulationstaste, nicht per EEG.'
+        : 'Testimpuls abgelehnt (' + decision.reason + '). Bitte Scan starten oder erneut versuchen.';
+    }
+  });
+  mockSignalButton.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('mindspeak:selection-signal', {
+      detail: { type: 'select', confidence: 0.95, timestampMs: performance.now(), source: 'simulated' }
+    }));
+  });
+  speed.addEventListener('change', changeSpeed);
+  rounds.addEventListener('change', changeSpeed);
+  practiceStart.addEventListener('click', () => {
+    stopScan();
+    practice = { order: makeTrainingOrder(), step: 0, results: [], started: performance.now() };
+    finishedPractice = null;
+    practiceSummary.hidden = true;
+    practiceExport.disabled = true;
+    practicePrompt.textContent = 'Aufgabe 1 von ' + practice.order.length + ': „' + engine.phrases[practice.order[0]] + '“ wählen';
+    practiceResult.textContent = 'Du kannst tippen oder den Scan starten. Keine Sprachausgabe während der Übung.';
+    practiceStart.textContent = 'Übung neu beginnen';
+    practiceCancel.disabled = false;
+    practiceStart.blur();
+  });
+  practiceCancel.addEventListener('click', () => {
+    stopScan(); practice = null;
+    practicePrompt.textContent = 'Test abgebrochen';
+    practiceSummary.hidden = true;
+    practiceResult.textContent = 'Unvollständige Testergebnisse wurden verworfen.';
+    practiceCancel.disabled = true;
+  });
+  practiceExport.addEventListener('click', () => {
+    if (!finishedPractice) return;
+    const header = ['Aufgabe','Ziel','Auswahl','Richtig','Zeit_Sekunden','Eingabeart'];
+    const quote = value => '"' + String(value).replace(/"/g, '""') + '"';
+    const rows = finishedPractice.map(r => [
+      r.step, engine.phrases[r.target], r.selected === null ? 'keine' : engine.phrases[r.selected],
+      r.correct ? 1 : 0, r.seconds.toFixed(3), r.method
+    ].map(quote).join(','));
+    const blob = new Blob(['\uFEFF' + [header.join(','), ...rows].join('\r\n')], {type:'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mindspeak_bedienungstest_anonym.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  tiles.forEach((tile, i) => tile.addEventListener('click', () => choose(i, 'Touch')));
+  repeat.addEventListener('click', () => { if (last !== null && practice === null) speak(last); });
+  undo.addEventListener('click', () => {
+    if (practice !== null) return;
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    engine.undo();
+    last = engine.history[0] ?? null;
+    output.textContent = last ?? 'Noch keine Aussage gewählt';
+    repeat.disabled = last === null;
+    renderHistory();
+    status.textContent = 'Letzte Auswahl aus dieser Sitzung zurückgenommen. Bereits Gehörtes lässt sich nicht rückgängig machen.';
+  });
+  speechToggle.addEventListener('click', () => {
+    speechEnabled = !speechEnabled;
+    speechToggle.setAttribute('aria-pressed', String(speechEnabled));
+    speechToggle.textContent = 'Sprachausgabe: ' + (speechEnabled ? 'An' : 'Aus');
+    if (!speechEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  });
+  stopSpeech.addEventListener('click', () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); });
+  voiceFemale.addEventListener('click', () => {
+    currentVoiceProfile = 'female';
+    renderVoiceControls();
+  });
+  voiceMale.addEventListener('click', () => {
+    if (voiceMale.disabled) return;
+    currentVoiceProfile = 'male';
+    renderVoiceControls();
+  });
+  voiceSelect.addEventListener('change', () => {
+    voiceProfiles[currentVoiceProfile] = voiceSelect.value || null;
+    renderVoiceControls();
+  });
+  voiceRefresh.addEventListener('click', loadVoices);
+  voicePreview.addEventListener('click', () => {
+    speak('Hallo. Ich bin deine Stimme für MindSpeak. Wie kann ich dir helfen?', true);
+  });
+  if ('speechSynthesis' in window) {
+    if (typeof window.speechSynthesis.addEventListener === 'function') {
+      window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    } else {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
+  loadVoices();
+  document.getElementById('clear-history').addEventListener('click', () => { engine.clearHistory(); renderHistory(); status.textContent = 'Sitzungsverlauf gelöscht.'; });
+  document.addEventListener('keydown', event => {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
+    const target = event.target;
+    if (target instanceof Element && target.closest('select, input, textarea')) return;
+    if (event.key === 'Escape') { if (interval !== null) stopScan('Scan abgebrochen.'); return; }
+    if (interval !== null) {
+      if (event.code === 'Space') {
+        event.preventDefault(); choose(engine.index, 'Scan-Tastatur');
+      }
+      return;
+    }
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault(); highlight = true; engine.next(); renderTiles();
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault(); highlight = true; engine.previous(); renderTiles();
+    } else if (event.code === 'Space' && highlight && !(target instanceof Element && target.closest('button'))) {
+      event.preventDefault(); choose(engine.index, 'Tastatur');
+    } else if (/^[1-4]$/.test(event.key) && !(target instanceof Element && target.closest('button'))) {
+      event.preventDefault(); choose(Number(event.key) - 1, 'Tastatur');
+    } else if (event.code === 'Space' && !highlight && !(target instanceof Element && target.closest('button'))) {
+      // Real one-switch users may have only Space. First actuation can start scanning.
+      event.preventDefault(); startScan();
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && interval !== null) stopScan('Scan beim Wechsel in eine andere App aus Sicherheitsgründen beendet.');
+  });
+  renderTiles();
+  renderHistory();
+})();
+</script>
+</body>
+</html>
