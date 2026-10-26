@@ -37,3 +37,22 @@ test('rejection does not consume the next permissible signal', () => {
 test('rejects invalid gate configuration', () => {
   assert.throws(() => new MindSpeakSignalBridge({ minConfidence: 5 }), RangeError);
 });
+
+test('refuses unvalidated hardware or missing signal source', () => {
+  const bridge = new MindSpeakSignalBridge();
+  assert.equal(
+    bridge.evaluate({ type: 'select', confidence: 0.99, timestampMs: 100, source: 'eeg' }, 100, true).reason,
+    'unsupported-source'
+  );
+  assert.equal(
+    bridge.evaluate({ type: 'select', confidence: 0.99, timestampMs: 100 }, 100, true).reason,
+    'unsupported-source'
+  );
+  assert.equal(bridge.evaluate(signal(120), 120, true).accepted, true);
+});
+
+test('confidence and age boundaries are inclusive', () => {
+  const bridge = new MindSpeakSignalBridge();
+  assert.equal(bridge.evaluate(signal(500, 0.85), 1000, true).accepted, true);
+  assert.equal(bridge.evaluate(signal(1000, 0.85), 2001, true).reason, 'stale-or-future');
+});
