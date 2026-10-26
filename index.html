@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a1827">
   <meta name="description" content="MindSpeak Connect – barrierearme, lokale Kommunikationsdemo ohne EEG-Verbindung">
-  <title>MindSpeak Connect 0.2 · Kommunikationsdemo und Bedienungstest</title>
+  <title>MindSpeak Connect 0.3 · Kommunikationsdemo mit Stimmwahl</title>
   <style>
     :root { color-scheme: dark; --bg:#091725; --panel:#122438; --line:#385069; --text:#f1f7fb; --muted:#c6d6e3; --mint:#8af2d3; --blue:#9ed8ff; --focus:#ffdd7e; }
     * { box-sizing:border-box; }
@@ -55,7 +55,7 @@
 </head>
 <body>
 <main class="wrap" id="main">
-  <div class="eyebrow">MindSpeak · Connect · Version 0.2</div>
+  <div class="eyebrow">MindSpeak · Connect · Version 0.3</div>
   <h1>Deine Worte. Deine Entscheidung.</h1>
   <p class="intro">Eine erste barrierearme Kommunikationsoberfläche mit großen Antwortfeldern, optionaler Sprachausgabe und Ein-Tasten-Auswahl. Entwickelt als <strong>Bedienungsdemo</strong> für spätere Tests mit Menschen, die Unterstützung beim Kommunizieren benötigen.</p>
   <div class="warning" role="note"><strong>Wichtig:</strong> Dies ist eine <strong>Demo ohne EEG-Verbindung</strong> und kein geprüftes Hilfsmittel. Die Hilfe-Taste sendet <strong>keinen Notruf</strong>. Verlasse dich in einer Notsituation nicht darauf.</div>
@@ -80,6 +80,33 @@
       <button type="button" class="control" id="toggle-speech" aria-pressed="true">Sprachausgabe: An</button>
       <button type="button" class="control" id="stop-speech">Vorlesen stoppen</button>
     </div>
+  </section>
+
+
+  <section class="panel" aria-labelledby="voice-title">
+    <h2 id="voice-title">Eine angenehmere Stimme wählen</h2>
+    <p class="small">Zwei Stimmprofile: Du kannst auf deinem Gerät vorhandene deutsche Stimmen zuordnen und anhören. Die Bezeichnungen „weiblich“ und „männlich“ sind Profilnamen – der Browser teilt uns das Geschlecht einer Stimme nicht zuverlässig mit.</p>
+    <div class="controls" role="group" aria-label="Stimmprofil auswählen">
+      <button type="button" class="control primary" id="voice-female" aria-pressed="true">Weibliches Profil</button>
+      <button type="button" class="control" id="voice-male" aria-pressed="false">Männliches Profil</button>
+    </div>
+    <div class="controls" style="margin-top:14px">
+      <div>
+        <label for="voice-select">Deutsche Stimme für dieses Profil</label>
+        <select id="voice-select"><option value="">Systemstimme (nicht zugeordnet)</option></select>
+      </div>
+      <div>
+        <label for="voice-rate">Sprechtempo</label>
+        <select id="voice-rate">
+          <option value="0.85">Sehr ruhig</option>
+          <option value="0.95" selected>Sanft / normal</option>
+          <option value="1.05">Normal / zügig</option>
+          <option value="1.15">Etwas schneller</option>
+        </select>
+      </div>
+      <button type="button" class="control primary" id="voice-preview">Stimme anhören</button>
+    </div>
+    <p class="small" id="voice-status" role="status" aria-live="polite">Deutsche Stimmen werden geladen. Die Auswahl gilt nur für diese Sitzung.</p>
   </section>
 
   <section class="panel" aria-labelledby="scan-title">
@@ -131,7 +158,7 @@
 
   <details>
     <summary>Bedienung und Datenschutz</summary>
-    <p>Die Demo funktioniert ohne Konto und ohne Netzwerk. Sie speichert keine Aussagen dauerhaft und überträgt sie nicht an einen Server. Beim Neuladen gehen Verlauf und Übungsergebnisse verloren. Die Vorlesefunktion nutzt die Sprachausgabe des Browsers bzw. Betriebssystems und kann je nach Gerät unterschiedlich verfügbar sein.</p>
+    <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
     <p><strong>Wichtig zur Forschung:</strong> Unsere bisherigen PhysioNet-Daten untersuchen die Vorstellung linker/rechter Faustbewegungen, nicht Gedanken oder gesprochene Aussagen. Eine spätere EEG-Steuerung der vier Felder muss zuerst eigenständig validiert werden. Die hier dargestellten Worte werden derzeit ausschließlich über Berührung oder Tastatur ausgewählt.</p>
   </details>
   <footer>MindSpeak Connect · Interaktionsprototyp · Keine medizinische Zweckbestimmung oder Notruffunktion · Für Tests, nicht für die Versorgung.</footer>
@@ -185,6 +212,16 @@ class MindSpeakEngine {
   const practicePrompt = document.getElementById('practice-prompt');
   const practiceResult = document.getElementById('practice-result');
   const speechToggle = document.getElementById('toggle-speech');
+  const voiceFemale = document.getElementById('voice-female');
+  const voiceMale = document.getElementById('voice-male');
+  const voiceSelect = document.getElementById('voice-select');
+  const voiceRate = document.getElementById('voice-rate');
+  const voicePreview = document.getElementById('voice-preview');
+  const voiceStatus = document.getElementById('voice-status');
+  const voiceProfiles = { female: null, male: null };
+  let currentVoiceProfile = 'female';
+  let germanVoices = [];
+
   let speechEnabled = true;
   let interval = null;
   let last = null;
@@ -215,8 +252,61 @@ class MindSpeakEngine {
       }
     }
   }
-  function speak(text) {
-    if (!speechEnabled) return;
+  function voiceKey(voice) {
+    return [voice.name, voice.lang, voice.voiceURI].join(' | ');
+  }
+  function selectedVoice() {
+    const key = voiceProfiles[currentVoiceProfile];
+    return germanVoices.find(v => voiceKey(v) === key) || null;
+  }
+  function renderVoiceControls() {
+    voiceFemale.setAttribute('aria-pressed', String(currentVoiceProfile === 'female'));
+    voiceMale.setAttribute('aria-pressed', String(currentVoiceProfile === 'male'));
+    voiceFemale.classList.toggle('primary', currentVoiceProfile === 'female');
+    voiceMale.classList.toggle('primary', currentVoiceProfile === 'male');
+    voiceSelect.value = voiceProfiles[currentVoiceProfile] || '';
+    const voice = selectedVoice();
+    if (!germanVoices.length) {
+      voiceStatus.textContent = 'Der Browser meldet noch keine deutschen Stimmen. Die Hörprobe verwendet, wenn möglich, die Systemstimme.';
+    } else if (voice) {
+      voiceStatus.textContent = 'Dieses Profil verwendet: ' + voice.name + '. Hör sie dir an und prüfe, ob sie passend klingt.';
+    } else {
+      voiceStatus.textContent = 'Für dieses Profil ist noch keine eigene Stimme ausgewählt. Bis dahin wird die Systemstimme verwendet.';
+    }
+  }
+  function loadVoices() {
+    if (!('speechSynthesis' in window) || typeof window.speechSynthesis.getVoices !== 'function') {
+      voiceStatus.textContent = 'Dieser Browser bietet keine auswählbaren Stimmen an.';
+      voiceSelect.disabled = true;
+      return;
+    }
+    const list = window.speechSynthesis.getVoices().filter(v => /^de(?:[-_]|$)/i.test(v.lang || ''));
+    germanVoices = list;
+    const previous = voiceProfiles[currentVoiceProfile];
+    voiceSelect.replaceChildren();
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Systemstimme / noch keine Zuordnung';
+    voiceSelect.appendChild(placeholder);
+    for (const voice of germanVoices) {
+      const option = document.createElement('option');
+      option.value = voiceKey(voice);
+      option.textContent = voice.name + ' (' + voice.lang + ')';
+      voiceSelect.appendChild(option);
+    }
+    // Suggest two different voices when available; these are NOT gender labels.
+    if (!voiceProfiles.female && germanVoices.length) voiceProfiles.female = voiceKey(germanVoices[0]);
+    if (!voiceProfiles.male && germanVoices.length > 1) {
+      const alternative = germanVoices.find(v => voiceKey(v) !== voiceProfiles.female);
+      if (alternative) voiceProfiles.male = voiceKey(alternative);
+    }
+    if (previous && !germanVoices.some(v => voiceKey(v) === previous)) {
+      voiceProfiles[currentVoiceProfile] = null;
+    }
+    renderVoiceControls();
+  }
+  function speak(text, isPreview = false) {
+    if (!speechEnabled && !isPreview) return;
     if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
       status.textContent = 'Die Sprachausgabe wird von diesem Browser nicht unterstützt. Die Aussage wird sichtbar angezeigt.';
       return;
@@ -224,8 +314,12 @@ class MindSpeakEngine {
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'de-DE';
-      utterance.rate = 0.88;
+      const voice = selectedVoice();
+      if (voice) utterance.voice = voice;
+      utterance.lang = voice ? voice.lang : 'de-DE';
+      utterance.rate = Number(voiceRate.value);
+      utterance.pitch = 1.0; // Do not simulate gender by distorting pitch.
+      utterance.volume = 0.92;
       window.speechSynthesis.speak(utterance);
     } catch (err) {
       status.textContent = 'Die Sprachausgabe ist auf diesem Gerät derzeit nicht verfügbar.';
@@ -336,6 +430,29 @@ class MindSpeakEngine {
     if (!speechEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
   });
   stopSpeech.addEventListener('click', () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); });
+  voiceFemale.addEventListener('click', () => {
+    currentVoiceProfile = 'female';
+    renderVoiceControls();
+  });
+  voiceMale.addEventListener('click', () => {
+    currentVoiceProfile = 'male';
+    renderVoiceControls();
+  });
+  voiceSelect.addEventListener('change', () => {
+    voiceProfiles[currentVoiceProfile] = voiceSelect.value || null;
+    renderVoiceControls();
+  });
+  voicePreview.addEventListener('click', () => {
+    speak('Hallo. Ich bin deine Stimme für MindSpeak. Wie kann ich dir helfen?', true);
+  });
+  if ('speechSynthesis' in window) {
+    if (typeof window.speechSynthesis.addEventListener === 'function') {
+      window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    } else {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
+  loadVoices();
   document.getElementById('clear-history').addEventListener('click', () => { engine.clearHistory(); renderHistory(); status.textContent = 'Sitzungsverlauf gelöscht.'; });
   document.addEventListener('keydown', event => {
     if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
