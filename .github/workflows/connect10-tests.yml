@@ -1,0 +1,25 @@
+name: MindSpeak 1.0 multi-sentence scan benchmark
+
+on:
+  push:
+    branches:
+      - feature/connect10-multisentence-evaluation
+  pull_request:
+    paths:
+      - mindspeak-multi-sentence-1.0.html
+      - tests/connect10-multisentence.test.cjs
+      - .github/workflows/connect10-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect10-multisentence.test.cjs
