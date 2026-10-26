@@ -31,11 +31,11 @@
   }
   class RowColumnScan {
     constructor(rows=ROWS) {
-      if (!Array.isArray(rows) || rows.length===0 || rows.some(r=>!Array.isArray(r)||r.length!==rows.length)) throw new TypeError('Expected square scan matrix');
+      if (!Array.isArray(rows) || rows.length<2 || rows.some(r=>!Array.isArray(r)||r.length!==6)) throw new TypeError('Expected at least two scan rows of six keys');
       this.rows=rows;this.reset();
     }
     reset(){this.stage='row';this.index=0;this.row=0;}
-    next(){this.index=(this.index+1)%this.rows.length;return this.index;}
+    next(){this.index=(this.index+1)%(this.stage==='row'?this.rows.length:this.rows[this.row].length);return this.index;}
     label() {
       return this.stage==='row'
         ? 'Reihe '+(this.index+1)+': '+this.rows[this.index].map(k=>k===' '?'Leerzeichen':k).join(' · ')
