@@ -1,0 +1,26 @@
+name: MindSpeak 0.7 hybrid logic checks
+
+on:
+  push:
+    branches:
+      - feature/connect07-hybrid-communication
+  pull_request:
+    paths:
+      - hybrid-input.js
+      - tests/hybrid-input.test.cjs
+      - .github/workflows/hybrid-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  logic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check hybrid-input.js
+      - run: node --test tests/hybrid-input.test.cjs
