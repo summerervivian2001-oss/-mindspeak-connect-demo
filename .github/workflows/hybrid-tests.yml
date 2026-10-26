@@ -7,7 +7,10 @@ on:
   pull_request:
     paths:
       - hybrid-input.js
-      - tests/hybrid-input.test.cjs
+      - tests/hybrid-*.test.cjs
+      - tests/word-suggestions.test.cjs
+      - word-suggestions.js
+      - mindspeak-test-0.8.html
       - .github/workflows/hybrid-tests.yml
 
 permissions:
@@ -23,4 +26,4 @@ jobs:
         with:
           node-version: '22'
       - run: node --check hybrid-input.js
-      - run: node --test tests/hybrid-*.test.cjs
+      - run: node --test tests/*.test.cjs
