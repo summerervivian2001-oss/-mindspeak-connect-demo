@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a1827">
   <meta name="description" content="MindSpeak Connect – barrierearme, lokale Kommunikationsdemo ohne EEG-Verbindung">
-  <title>MindSpeak Connect 0.3.1 · Transparente Browser-Stimmauswahl</title>
+  <title>MindSpeak Connect 0.4 · Bedienungstest mit 12 Aufgaben</title>
   <style>
     :root { color-scheme: dark; --bg:#091725; --panel:#122438; --line:#385069; --text:#f1f7fb; --muted:#c6d6e3; --mint:#8af2d3; --blue:#9ed8ff; --focus:#ffdd7e; }
     * { box-sizing:border-box; }
@@ -55,7 +55,7 @@
 </head>
 <body>
 <main class="wrap" id="main">
-  <div class="eyebrow">MindSpeak · Connect · Version 0.3.1</div>
+  <div class="eyebrow">MindSpeak · Connect · Version 0.4</div>
   <h1>Deine Worte. Deine Entscheidung.</h1>
   <p class="intro">Eine erste barrierearme Kommunikationsoberfläche mit großen Antwortfeldern, optionaler Sprachausgabe und Ein-Tasten-Auswahl. Entwickelt als <strong>Bedienungsdemo</strong> für spätere Tests mit Menschen, die Unterstützung beim Kommunizieren benötigen.</p>
   <div class="warning" role="note"><strong>Wichtig:</strong> Dies ist eine <strong>Demo ohne EEG-Verbindung</strong> und kein geprüftes Hilfsmittel. Die Hilfe-Taste sendet <strong>keinen Notruf</strong>. Verlasse dich in einer Notsituation nicht darauf.</div>
@@ -143,13 +143,14 @@
   </section>
 
   <section class="panel practice" aria-labelledby="practice-title">
-    <h2 id="practice-title">Bedienung ausprobieren – 4 kurze Aufgaben</h2>
-    <p class="small">Im Übungsmodus zeigen wir dir nacheinander vier Aussagen, die du auswählen sollst. Wir messen Auswahlzeit und Trefferzahl. <strong>Während der Übung wird nichts vorgelesen</strong>, und keine Auswahl wird in den Kommunikationsverlauf übernommen. Alle Werte verschwinden beim Schließen.</p>
+    <h2 id="practice-title">Bedienung prüfen – 12 gemischte Aufgaben</h2>
+    <p class="small">In diesem freiwilligen Techniktest bekommst du zwölf zufällig gemischte Aufgaben (jede Aussage dreimal). Wir erfassen richtige und falsche Auswahlen, Auswahlzeit, Eingabeart und Scans ohne Auswahl. <strong>Während des Tests wird nichts vorgelesen</strong>; keine Auswahl geht in den Kommunikationsverlauf. <strong>Das ist kein Nachweis medizinischer Wirksamkeit.</strong></p>
     <p class="prompt" id="practice-prompt" role="status" aria-live="polite">Noch keine Übung gestartet</p>
     <p class="result" id="practice-result" aria-live="polite">Teste direktes Tippen oder den Ein-Tasten-Scan.</p>
     <div class="controls">
       <button type="button" class="control primary" id="practice-start">Übung starten</button>
-      <button type="button" class="control" id="practice-cancel" disabled>Übung abbrechen</button>
+      <button type="button" class="control" id="practice-cancel" disabled>Test abbrechen</button>
+      <button type="button" class="control" id="practice-export" disabled>Ergebnis als CSV speichern</button>
     </div>
   </section>
 
@@ -161,7 +162,7 @@
 
   <details>
     <summary>Bedienung und Datenschutz</summary>
-    <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
+    <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Testergebnisse werden nur gespeichert, wenn du bewusst auf „Ergebnis als CSV speichern“ tippst; dabei entsteht eine Datei auf deinem Gerät ohne Namen oder personenbezogene Angaben. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
     <p><strong>Wichtig zur Forschung:</strong> Unsere bisherigen PhysioNet-Daten untersuchen die Vorstellung linker/rechter Faustbewegungen, nicht Gedanken oder gesprochene Aussagen. Eine spätere EEG-Steuerung der vier Felder muss zuerst eigenständig validiert werden. Die hier dargestellten Worte werden derzeit ausschließlich über Berührung oder Tastatur ausgewählt.</p>
   </details>
   <footer>MindSpeak Connect · Interaktionsprototyp · Keine medizinische Zweckbestimmung oder Notruffunktion · Für Tests, nicht für die Versorgung.</footer>
@@ -214,6 +215,7 @@ class MindSpeakEngine {
   const practiceCancel = document.getElementById('practice-cancel');
   const practicePrompt = document.getElementById('practice-prompt');
   const practiceResult = document.getElementById('practice-result');
+  const practiceExport = document.getElementById('practice-export');
   const speechToggle = document.getElementById('toggle-speech');
   const voiceFemale = document.getElementById('voice-female');
   const voiceMale = document.getElementById('voice-male');
@@ -233,7 +235,15 @@ class MindSpeakEngine {
   let highlight = false;
   let scanCycles = 0;
   let practice = null;
-  const trainingOrder = [0, 2, 1, 3];
+  let finishedPractice = null;
+  function makeTrainingOrder() {
+    const order = [0,1,2,3,0,1,2,3,0,1,2,3];
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return order;
+  }
   function renderTiles() {
     tiles.forEach((el, idx) => {
       const active = highlight && engine.index === idx;
@@ -351,28 +361,42 @@ class MindSpeakEngine {
     renderTiles();
     if (message) status.textContent = message;
   }
-  function choose(index = engine.index) {
+  function recordPractice(index, method) {
+    if (practice === null) return;
+    const target = practice.order[practice.step];
+    const seconds = Math.max(0, performance.now() - practice.started) / 1000;
+    const correct = index !== null && index === target;
+    const selected = index === null ? null : engine.setIndex(index);
+    practice.results.push({ step: practice.step + 1, target, selected: index, seconds, method, correct });
+    stopScan();
+    practice.step++;
+    if (practice.step >= practice.order.length) {
+      const results = practice.results.slice();
+      const correctCount = results.filter(r => r.correct).length;
+      const attempts = results.filter(r => r.selected !== null);
+      const missed = results.length - attempts.length;
+      const times = attempts.map(r => r.seconds).sort((a,b) => a-b);
+      const half = Math.floor(times.length / 2);
+      const median = times.length ? (times.length % 2 ? times[half] : (times[half-1] + times[half]) / 2) : null;
+      const byMethod = [...new Set(attempts.map(r => r.method))].map(method => method + ': ' + attempts.filter(r => r.method === method).length).join(', ');
+      practicePrompt.textContent = 'Test abgeschlossen';
+      practiceResult.textContent = correctCount + ' von ' + results.length + ' richtig; ' + missed + ' Scans ohne Auswahl. ' +
+        (median === null ? 'Keine Auswahlzeit messbar.' : 'Median pro abgegebener Auswahl: ' + median.toFixed(1) + ' Sekunden.') +
+        ' Eingaben: ' + (byMethod || 'keine') + '. Kein EEG-Test und kein medizinischer Wirksamkeitsnachweis.';
+      finishedPractice = results;
+      practice = null;
+      practiceExport.disabled = false;
+      practiceCancel.disabled = true;
+      practiceStart.textContent = 'Test wiederholen';
+    } else {
+      practice.started = performance.now();
+      practicePrompt.textContent = 'Aufgabe ' + (practice.step + 1) + ' von ' + practice.order.length + ': „' + engine.phrases[practice.order[practice.step]] + '“ wählen';
+      practiceResult.textContent = index === null ? 'Keine Auswahl im letzten Scan. Nächste Aufgabe.' : 'Letzte Auswahl: ' + selected + (correct ? ' – richtig.' : ' – andere Aussage gewählt.');
+    }
+  }
+  function choose(index = engine.index, method = 'Touch') {
     if (practice !== null) {
-      const selected = engine.setIndex(index);
-      const target = trainingOrder[practice.step];
-      const elapsed = Math.max(0, performance.now() - practice.started) / 1000;
-      practice.results.push({selected: index, target, seconds: elapsed, correct: index === target});
-      stopScan();
-      practice.step++;
-      if (practice.step === trainingOrder.length) {
-        const correct = practice.results.filter(r => r.correct).length;
-        const times = practice.results.map(r => r.seconds).sort((a, b) => a-b);
-        const median = (times[1]+times[2])/2;
-        practicePrompt.textContent = 'Übung abgeschlossen';
-        practiceResult.textContent = correct + ' von 4 richtig, mittlere Auswahlzeit (Median): ' + median.toFixed(1) + ' Sekunden. Keine Aussagen gesendet.';
-        practice = null;
-        practiceCancel.disabled = true;
-        practiceStart.textContent = 'Übung wiederholen';
-      } else {
-        practice.started = performance.now();
-        practicePrompt.textContent = 'Aufgabe ' + (practice.step+1) + ' von 4: „' + engine.phrases[trainingOrder[practice.step]] + '“ wählen';
-        practiceResult.textContent = 'Letzte Auswahl: ' + selected + (index === target ? ' – richtig.' : ' – nicht die gewünschte Aussage.');
-      }
+      recordPractice(index, method);
       return;
     }
     const phrase = engine.select(index);
@@ -401,7 +425,10 @@ class MindSpeakEngine {
       if (engine.index === 0) {
         scanCycles++;
         const limit = Number(rounds.value);
-        if (limit > 0 && scanCycles >= limit) stopScan('Scan automatisch beendet, ohne eine Aussage auszuwählen.');
+        if (limit > 0 && scanCycles >= limit) {
+          stopScan('Scan automatisch beendet, ohne eine Aussage auszuwählen.');
+          if (practice !== null) recordPractice(null, 'Scan ohne Auswahl');
+        }
       }
     }, Number(speed.value));
   }
@@ -409,13 +436,15 @@ class MindSpeakEngine {
     if (interval !== null) { stopScan(); startScan(); }
   }
   toggle.addEventListener('click', () => interval === null ? startScan() : stopScan('Scan beendet.'));
-  trigger.addEventListener('click', () => { if (interval !== null) choose(); });
+  trigger.addEventListener('click', () => { if (interval !== null) choose(engine.index, 'Scan-Bildschirmtaste'); });
   speed.addEventListener('change', changeSpeed);
   rounds.addEventListener('change', changeSpeed);
   practiceStart.addEventListener('click', () => {
     stopScan();
-    practice = { step: 0, results: [], started: performance.now() };
-    practicePrompt.textContent = 'Aufgabe 1 von 4: „' + engine.phrases[trainingOrder[0]] + '“ wählen';
+    practice = { order: makeTrainingOrder(), step: 0, results: [], started: performance.now() };
+    finishedPractice = null;
+    practiceExport.disabled = true;
+    practicePrompt.textContent = 'Aufgabe 1 von ' + practice.order.length + ': „' + engine.phrases[practice.order[0]] + '“ wählen';
     practiceResult.textContent = 'Du kannst tippen oder den Scan starten. Keine Sprachausgabe während der Übung.';
     practiceStart.textContent = 'Übung neu beginnen';
     practiceCancel.disabled = false;
@@ -423,11 +452,29 @@ class MindSpeakEngine {
   });
   practiceCancel.addEventListener('click', () => {
     stopScan(); practice = null;
-    practicePrompt.textContent = 'Übung abgebrochen';
-    practiceResult.textContent = 'Die bisherigen Übungswerte wurden verworfen.';
+    practicePrompt.textContent = 'Test abgebrochen';
+    practiceResult.textContent = 'Unvollständige Testergebnisse wurden verworfen.';
     practiceCancel.disabled = true;
   });
-  tiles.forEach((tile, i) => tile.addEventListener('click', () => choose(i)));
+  practiceExport.addEventListener('click', () => {
+    if (!finishedPractice) return;
+    const header = ['Aufgabe','Ziel','Auswahl','Richtig','Zeit_Sekunden','Eingabeart'];
+    const quote = value => '"' + String(value).replace(/"/g, '""') + '"';
+    const rows = finishedPractice.map(r => [
+      r.step, engine.phrases[r.target], r.selected === null ? 'keine' : engine.phrases[r.selected],
+      r.correct ? 1 : 0, r.seconds.toFixed(3), r.method
+    ].map(quote).join(','));
+    const blob = new Blob(['\uFEFF' + [header.join(','), ...rows].join('\r\n')], {type:'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mindspeak_bedienungstest_anonym.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  tiles.forEach((tile, i) => tile.addEventListener('click', () => choose(i, 'Touch')));
   repeat.addEventListener('click', () => { if (last !== null && practice === null) speak(last); });
   undo.addEventListener('click', () => {
     if (practice !== null) return;
@@ -479,7 +526,7 @@ class MindSpeakEngine {
     if (event.key === 'Escape') { if (interval !== null) stopScan('Scan abgebrochen.'); return; }
     if (interval !== null) {
       if (event.code === 'Space') {
-        event.preventDefault(); choose();
+        event.preventDefault(); choose(engine.index, 'Scan-Tastatur');
       }
       return;
     }
@@ -488,9 +535,9 @@ class MindSpeakEngine {
     } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
       event.preventDefault(); highlight = true; engine.previous(); renderTiles();
     } else if (event.code === 'Space' && highlight && !(target instanceof Element && target.closest('button'))) {
-      event.preventDefault(); choose();
+      event.preventDefault(); choose(engine.index, 'Tastatur');
     } else if (/^[1-4]$/.test(event.key) && !(target instanceof Element && target.closest('button'))) {
-      event.preventDefault(); choose(Number(event.key) - 1);
+      event.preventDefault(); choose(Number(event.key) - 1, 'Tastatur');
     } else if (event.code === 'Space' && !highlight && !(target instanceof Element && target.closest('button'))) {
       // Real one-switch users may have only Space. First actuation can start scanning.
       event.preventDefault(); startScan();
