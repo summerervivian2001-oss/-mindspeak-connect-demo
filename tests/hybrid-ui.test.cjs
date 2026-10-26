@@ -18,7 +18,8 @@ test('scan optionally stays active after composing one letter, no implicit outpu
  assert.match(html,/id="auto-continue" aria-pressed="true"/);
  assert.match(html,/autoContinueEnabled=true/);
  assert.match(html,/if\(result\.key==='Satz sprechen'\|\|!autoContinueEnabled\)/);
- assert.match(html,/handleKey\(result\.key\);\s*if\(timer===null\)return;\s*clearInterval\(timer\);\s*startTimer\(\);\s*render\(\);/);
+ assert.match(html,/handleKey\(result\.key\);\s*if\(timer===null\)return;/);
+ assert.match(html,/clearInterval\(timer\);\s*startTimer\(\);\s*render\(\);\s*status\.textContent='Zeichen bearbeitet/);
  assert.match(html,/Nach einem Buchstaben läuft der Scan standardmäßig automatisch weiter, ohne selbst etwas auszuwählen oder zu sprechen/);
 });
 test('stopping for speech, hidden background and scan stop stay available',()=>{
