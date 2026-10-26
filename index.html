@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a1827">
   <meta name="description" content="MindSpeak Connect – barrierearme, lokale Kommunikationsdemo ohne EEG-Verbindung">
-  <title>MindSpeak Connect 0.4 · Bedienungstest mit 12 Aufgaben</title>
+  <title>MindSpeak Connect 0.4.1 · Sichtbare Testergebnisse</title>
   <style>
     :root { color-scheme: dark; --bg:#091725; --panel:#122438; --line:#385069; --text:#f1f7fb; --muted:#c6d6e3; --mint:#8af2d3; --blue:#9ed8ff; --focus:#ffdd7e; }
     * { box-sizing:border-box; }
@@ -41,6 +41,15 @@
     .output-icon { font-size:2rem; }
     #status { color:var(--muted); min-height:25px; margin:8px 0 0; }
     .practice { border-color:#b6c3ee; }
+    [hidden] { display:none!important; }
+    .test-summary { margin:18px 0; padding:18px; border:2px solid var(--mint); border-radius:16px; background:#15363b; }
+    .test-summary h3 { font-size:clamp(1.4rem,5vw,1.95rem); margin:0 0 12px; color:var(--mint); }
+    .test-summary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0; }
+    .test-metric { border:1px solid #739b9a; background:#122d32; border-radius:10px; padding:12px; }
+    .test-metric strong { font-size:clamp(1.45rem,5vw,2.1rem); display:block; line-height:1.2; color:#fff; }
+    .test-metric span { font-size:.88rem; color:var(--muted); display:block; margin-top:4px; }
+    .test-summary .control { width:100%; margin-top:6px; }
+    .test-summary .small { color:#d5eae8; }
     .prompt { font-size:clamp(1.25rem,4vw,1.9rem); font-weight:800; padding:15px; background:#263a51; border-radius:10px; min-height:69px; }
     .result { padding:12px 0; font-weight:650; }
     .history { margin:0; padding-left:25px; }
@@ -55,7 +64,7 @@
 </head>
 <body>
 <main class="wrap" id="main">
-  <div class="eyebrow">MindSpeak · Connect · Version 0.4</div>
+  <div class="eyebrow">MindSpeak · Connect · Version 0.4.1</div>
   <h1>Deine Worte. Deine Entscheidung.</h1>
   <p class="intro">Eine erste barrierearme Kommunikationsoberfläche mit großen Antwortfeldern, optionaler Sprachausgabe und Ein-Tasten-Auswahl. Entwickelt als <strong>Bedienungsdemo</strong> für spätere Tests mit Menschen, die Unterstützung beim Kommunizieren benötigen.</p>
   <div class="warning" role="note"><strong>Wichtig:</strong> Dies ist eine <strong>Demo ohne EEG-Verbindung</strong> und kein geprüftes Hilfsmittel. Die Hilfe-Taste sendet <strong>keinen Notruf</strong>. Verlasse dich in einer Notsituation nicht darauf.</div>
@@ -149,11 +158,21 @@
     <p class="small">In diesem freiwilligen Techniktest bekommst du zwölf zufällig gemischte Aufgaben (jede Aussage dreimal). Wir erfassen richtige und falsche Auswahlen, Auswahlzeit, Eingabeart und Scans ohne Auswahl. <strong>Während des Tests wird nichts vorgelesen</strong>; keine Auswahl geht in den Kommunikationsverlauf. <strong>Das ist kein Nachweis medizinischer Wirksamkeit.</strong></p>
     <p class="prompt" id="practice-prompt" role="status" aria-live="polite">Noch keine Übung gestartet</p>
     <p class="result" id="practice-result" aria-live="polite">Teste direktes Tippen oder den Ein-Tasten-Scan.</p>
+    <section class="test-summary" id="practice-summary" aria-labelledby="practice-summary-title" hidden tabindex="-1">
+      <h3 id="practice-summary-title">Dein Testergebnis</h3>
+      <div class="test-summary-grid">
+        <div class="test-metric"><strong id="practice-score">–</strong><span>Richtige von 12 Aufgaben</span></div>
+        <div class="test-metric"><strong id="practice-time">–</strong><span>Median pro abgegebener Auswahl</span></div>
+        <div class="test-metric"><strong id="practice-errors">–</strong><span>Falsche Auswahlen</span></div>
+        <div class="test-metric"><strong id="practice-missed">–</strong><span>Scans ohne Auswahl</span></div>
+      </div>
+      <p class="small">Das ist ein Bedienungstest ohne EEG. Speichere bei Bedarf die Einzelwerte oder mache einen Screenshot dieses Ergebnisses.</p>
+      <button type="button" class="control primary" id="practice-export" disabled>Testergebnis als CSV herunterladen</button>
+    </section>
     <p class="small">Für Vergleichstests bitte einen Durchgang nur per Berührung und einen getrennten Durchgang mit Scan absolvieren. Die Testergebnisse sind eine technische Orientierung, kein klinischer Nachweis.</p>
     <div class="controls">
       <button type="button" class="control primary" id="practice-start">Übung starten</button>
       <button type="button" class="control" id="practice-cancel" disabled>Test abbrechen</button>
-      <button type="button" class="control" id="practice-export" disabled>Ergebnis als CSV speichern</button>
     </div>
   </section>
 
@@ -165,7 +184,7 @@
 
   <details>
     <summary>Bedienung und Datenschutz</summary>
-    <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Testergebnisse werden nur gespeichert, wenn du bewusst auf „Ergebnis als CSV speichern“ tippst; dabei entsteht eine Datei auf deinem Gerät ohne Namen und Kontaktdaten. Bitte beachte, dass auch solche Übungsdaten bei Weitergabe sensibel sein können. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
+    <p>Die Bedienungsoberfläche benötigt keinen eigenen Server, kein Konto und keine dauerhafte Speicherung. Aussagen werden durch den Demo-Code nicht an MindSpeak übertragen. Beim Neuladen gehen Verlauf, Stimmprofile und Übungsergebnisse verloren. Testergebnisse werden nur gespeichert, wenn du bewusst auf „Testergebnis als CSV herunterladen“ tippst; dabei entsteht eine Datei auf deinem Gerät ohne Namen und Kontaktdaten. Bitte beachte, dass auch solche Übungsdaten bei Weitergabe sensibel sein können. Die Sprachausgabe verwendet Browser- oder Betriebssystemstimmen: Je nach gewählter Stimme kann deren Anbieter einen Online-Sprachdienst verwenden; dessen Datenverarbeitung liegt außerhalb dieser Demo.</p>
     <p><strong>Wichtig zur Forschung:</strong> Unsere bisherigen PhysioNet-Daten untersuchen die Vorstellung linker/rechter Faustbewegungen, nicht Gedanken oder gesprochene Aussagen. Eine spätere EEG-Steuerung der vier Felder muss zuerst eigenständig validiert werden. Die hier dargestellten Worte werden derzeit ausschließlich über Berührung oder Tastatur ausgewählt.</p>
   </details>
   <footer>MindSpeak Connect · Interaktionsprototyp · Keine medizinische Zweckbestimmung oder Notruffunktion · Für Tests, nicht für die Versorgung.</footer>
@@ -218,6 +237,11 @@ class MindSpeakEngine {
   const practiceCancel = document.getElementById('practice-cancel');
   const practicePrompt = document.getElementById('practice-prompt');
   const practiceResult = document.getElementById('practice-result');
+  const practiceSummary = document.getElementById('practice-summary');
+  const practiceScore = document.getElementById('practice-score');
+  const practiceTime = document.getElementById('practice-time');
+  const practiceErrors = document.getElementById('practice-errors');
+  const practiceMissed = document.getElementById('practice-missed');
   const practiceExport = document.getElementById('practice-export');
   const speechToggle = document.getElementById('toggle-speech');
   const voiceFemale = document.getElementById('voice-female');
@@ -382,7 +406,12 @@ class MindSpeakEngine {
       const half = Math.floor(times.length / 2);
       const median = times.length ? (times.length % 2 ? times[half] : (times[half-1] + times[half]) / 2) : null;
       const byMethod = [...new Set(attempts.map(r => r.method))].map(method => method + ': ' + attempts.filter(r => r.method === method).length).join(', ');
-      practicePrompt.textContent = 'Test abgeschlossen';
+      practicePrompt.textContent = 'Test abgeschlossen – Ergebnis direkt darunter';
+      practiceSummary.hidden = false;
+      practiceScore.textContent = correctCount + ' / ' + results.length;
+      practiceTime.textContent = median === null ? '–' : median.toFixed(1) + ' s';
+      practiceErrors.textContent = String(attempts.length - correctCount);
+      practiceMissed.textContent = String(missed);
       practiceResult.textContent = correctCount + ' von ' + results.length + ' richtig; ' + missed + ' Scans ohne Auswahl. ' +
         (median === null ? 'Keine Auswahlzeit messbar.' : 'Median pro abgegebener Auswahl: ' + median.toFixed(1) + ' Sekunden.') +
         ' Eingaben: ' + (byMethod || 'keine') + '. Kein EEG-Test und kein medizinischer Wirksamkeitsnachweis.';
@@ -391,6 +420,7 @@ class MindSpeakEngine {
       practiceExport.disabled = false;
       practiceCancel.disabled = true;
       practiceStart.textContent = 'Test wiederholen';
+      practiceSummary.scrollIntoView({behavior:'auto',block:'center'});
     } else {
       practice.started = performance.now();
       practicePrompt.textContent = 'Aufgabe ' + (practice.step + 1) + ' von ' + practice.order.length + ': „' + engine.phrases[practice.order[practice.step]] + '“ wählen';
@@ -446,6 +476,7 @@ class MindSpeakEngine {
     stopScan();
     practice = { order: makeTrainingOrder(), step: 0, results: [], started: performance.now() };
     finishedPractice = null;
+    practiceSummary.hidden = true;
     practiceExport.disabled = true;
     practicePrompt.textContent = 'Aufgabe 1 von ' + practice.order.length + ': „' + engine.phrases[practice.order[0]] + '“ wählen';
     practiceResult.textContent = 'Du kannst tippen oder den Scan starten. Keine Sprachausgabe während der Übung.';
@@ -456,6 +487,7 @@ class MindSpeakEngine {
   practiceCancel.addEventListener('click', () => {
     stopScan(); practice = null;
     practicePrompt.textContent = 'Test abgebrochen';
+    practiceSummary.hidden = true;
     practiceResult.textContent = 'Unvollständige Testergebnisse wurden verworfen.';
     practiceCancel.disabled = true;
   });
