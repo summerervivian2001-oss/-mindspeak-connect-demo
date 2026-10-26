@@ -22,6 +22,11 @@
           !Number.isFinite(signal.timestampMs)) {
         return { accepted: false, reason: 'invalid-signal' };
       }
+      // Safety: only the manually generated test impulse is supported in v0.5.
+      // Real hardware requires an explicit, validated adapter and activation step.
+      if (signal.source !== 'simulated') {
+        return { accepted: false, reason: 'unsupported-source' };
+      }
       if (signal.confidence < this.minConfidence) {
         return { accepted: false, reason: 'low-confidence' };
       }
