@@ -28,6 +28,14 @@
     .tile[data-active="true"] { border-color:var(--focus); box-shadow:inset 0 0 0 3px var(--focus); background:#254057; }
     .tile:hover { border-color:var(--mint); }
     .tile[data-active="true"]:hover { border-color:var(--focus); }
+    /* Floating mobile scan controls keep the current selection visible. */
+    .scan-hud { position:fixed; bottom:max(12px, env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); z-index:10; width:min(570px,calc(100% - 24px)); background:#163c42; border:3px solid var(--mint); border-radius:20px; box-shadow:0 8px 32px #000b; padding:12px 14px 14px; }
+    .scan-hud[hidden] { display:none!important; }
+    .scan-hud .scan-live-label { font-size:clamp(1.2rem,5vw,1.7rem); font-weight:800; margin:1px 0 10px; overflow-wrap:anywhere; }
+    .scan-hud .scan-buttons { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .scan-hud .scan-buttons button { font-size:.98rem; min-height:55px; padding:8px 10px; }
+    .scan-hud .scan-buttons button:last-child { grid-column:span 2; min-height:44px; }
+    body.scan-running .wrap { padding-bottom:235px; }
     .panel { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:18px; margin:16px 0; }
     .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
     .control { background:#2a4058; color:var(--text); border:2px solid #7795b2; border-radius:12px; min-height:52px; padding:9px 16px; font-weight:700; }
@@ -159,6 +167,16 @@
     </details>
   </section>
 
+  <section class="scan-hud" id="scan-hud" aria-label="Aktive Scansteuerung" hidden>
+    <p class="small" style="margin:0">Scan läuft · aktuell gelb markiert:</p>
+    <p id="scan-current-label" class="scan-live-label" aria-live="off">Ja</p>
+    <div class="scan-buttons">
+      <button type="button" class="control primary" id="hud-choose">Dieses Feld auswählen</button>
+      <button type="button" class="control" id="hud-mock">Test-Impuls (kein EEG)</button>
+      <button type="button" class="control" id="hud-stop">Scan stoppen</button>
+    </div>
+  </section>
+
   <section class="panel practice" aria-labelledby="practice-title">
     <h2 id="practice-title">Bedienung prüfen – 12 gemischte Aufgaben</h2>
     <p class="small">In diesem freiwilligen Techniktest bekommst du zwölf zufällig gemischte Aufgaben (jede Aussage dreimal). Wir erfassen richtige und falsche Auswahlen, Auswahlzeit, Eingabeart und Scans ohne Auswahl. <strong>Während des Tests wird nichts vorgelesen</strong>; keine Auswahl geht in den Kommunikationsverlauf. <strong>Das ist kein Nachweis medizinischer Wirksamkeit.</strong></p>
@@ -237,6 +255,11 @@ class MindSpeakEngine {
   const signalBridge = new MindSpeakSignalBridge();
   const mockSignalButton = document.getElementById('mock-signal');
   const mockSignalStatus = document.getElementById('mock-signal-status');
+  const scanHud = document.getElementById('scan-hud');
+  const scanCurrentLabel = document.getElementById('scan-current-label');
+  const hudChoose = document.getElementById('hud-choose');
+  const hudMock = document.getElementById('hud-mock');
+  const hudStop = document.getElementById('hud-stop');
   const status = document.getElementById('status');
   const output = document.getElementById('last-phrase');
   const repeat = document.getElementById('repeat');
@@ -282,6 +305,7 @@ class MindSpeakEngine {
     return order;
   }
   function renderTiles() {
+    scanCurrentLabel.textContent = engine.current();
     tiles.forEach((el, idx) => {
       const active = highlight && engine.index === idx;
       el.dataset.active = String(active);
@@ -391,6 +415,8 @@ class MindSpeakEngine {
   function stopScan(message) {
     if (interval !== null) window.clearInterval(interval);
     interval = null;
+    scanHud.hidden = true;
+    document.body.classList.remove('scan-running');
     toggle.textContent = 'Scan starten';
     toggle.setAttribute('aria-pressed', 'false');
     trigger.disabled = true;
@@ -448,7 +474,7 @@ class MindSpeakEngine {
     repeat.disabled = false;
     renderHistory();
     stopScan();
-    status.textContent = 'Aussage gewählt. Du kannst erneut eine Aussage wählen.';
+    status.textContent = 'Aussage gewählt. Der Scan wurde angehalten. Starte ihn für die nächste Auswahl erneut.';
     speak(phrase);
   }
   function startScan() {
@@ -456,11 +482,13 @@ class MindSpeakEngine {
     engine.setIndex(0);
     scanCycles = 0;
     highlight = true;
+    scanHud.hidden = false;
+    document.body.classList.add('scan-running');
     renderTiles();
     toggle.textContent = 'Scan stoppen';
     toggle.setAttribute('aria-pressed', 'true');
     trigger.disabled = false;
-    status.textContent = 'Ein-Tasten-Scan aktiv. Leertaste oder „Markiertes Feld wählen“ zur Auswahl.';
+    status.textContent = 'Scan läuft. Das markierte Feld steht dauerhaft unten im eingeblendeten Scan-Fenster.';
     if (typeof toggle.blur === 'function') toggle.blur();
     interval = window.setInterval(() => {
       engine.next();
@@ -480,6 +508,8 @@ class MindSpeakEngine {
   }
   toggle.addEventListener('click', () => interval === null ? startScan() : stopScan('Scan beendet.'));
   trigger.addEventListener('click', () => { if (interval !== null) choose(engine.index, 'Scan-Bildschirmtaste'); });
+  hudChoose.addEventListener('click', () => { if (interval !== null) choose(engine.index, 'Scan-Bildschirmtaste'); });
+  hudStop.addEventListener('click', () => stopScan('Scan manuell beendet.'));
   // A future validated EEG adapter may dispatch this event.
   // Custom events are NOT authenticated and are not themselves EEG input.
   window.addEventListener('mindspeak:selection-signal', event => {
@@ -494,11 +524,13 @@ class MindSpeakEngine {
         : 'Testimpuls abgelehnt (' + decision.reason + '). Bitte Scan starten oder erneut versuchen.';
     }
   });
-  mockSignalButton.addEventListener('click', () => {
+  function sendMockImpulse() {
     window.dispatchEvent(new CustomEvent('mindspeak:selection-signal', {
       detail: { type: 'select', confidence: 0.95, timestampMs: performance.now(), source: 'simulated' }
     }));
-  });
+  }
+  mockSignalButton.addEventListener('click', sendMockImpulse);
+  hudMock.addEventListener('click', sendMockImpulse);
   speed.addEventListener('change', changeSpeed);
   rounds.addEventListener('change', changeSpeed);
   practiceStart.addEventListener('click', () => {
