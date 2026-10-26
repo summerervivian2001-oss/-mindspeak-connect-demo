@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#091725">
+<title>MindSpeak Connect 1.0 · Mehrere Alltagssätze vergleichen</title>
+<style>
+:root{color-scheme:dark;--bg:#091725;--panel:#122438;--text:#f1f7fb;--mint:#8cead0;--yellow:#ffdf85}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Arial,sans-serif}
+main{max-width:850px;margin:auto;padding:clamp(15px,4vw,30px)}
+h1{font-size:clamp(1.75rem,6vw,2.65rem);line-height:1.2;margin:9px 0}h2{font-size:1.2rem}
+.eyebrow{color:var(--mint);letter-spacing:.09em;text-transform:uppercase;font-weight:800;font-size:.82rem}
+.panel{border:1px solid #627d94;border-radius:16px;background:var(--panel);margin:16px 0;padding:16px}
+.warning{background:#29333a;border:2px solid #c4a970;padding:11px;border-radius:12px}
+button,select{font:inherit}button{background:#22435c;border:2px solid #90b1c3;color:var(--text);border-radius:11px;min-height:53px;padding:9px 13px;font-weight:750;cursor:pointer}
+button.primary{background:var(--mint);color:#05272c;border-color:var(--mint)}button:disabled{opacity:.48;cursor:not-allowed}
+button:focus-visible,select:focus-visible{outline:4px solid var(--yellow);outline-offset:2px}
+.controls{display:flex;flex-wrap:wrap;align-items:end;gap:10px}.controls button{flex:1 1 195px}
+select{background:#10273a;border:2px solid #b4c8d7;color:var(--text);border-radius:11px;padding:10px;min-height:52px}
+label{display:block;font-weight:750}.small{font-size:.89rem;color:#c8d9e7}
+.target{background:#143b43;padding:14px;border-radius:12px;font-size:clamp(1.35rem,4.4vw,1.95rem);font-weight:850}
+#text{background:#061d2e;min-height:80px;padding:13px;border-radius:12px;border:1px solid #80aac0;font-size:clamp(1.2rem,4vw,1.6rem);font-weight:750;overflow-wrap:anywhere}
+#status{min-height:38px;color:#baf2e2}
+.matrix{display:grid;gap:7px}.matrix-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;background:#102a41;border:3px solid transparent;border-radius:10px;padding:4px}
+.cell{display:flex;align-items:center;justify-content:center;text-align:center;min-height:48px;background:#24425d;border:2px solid #7996a7;border-radius:9px;padding:4px 1px;overflow-wrap:anywhere;font-size:clamp(.66rem,2.5vw,1rem);font-weight:720}
+.matrix-row[data-active="true"],.cell[data-active="true"]{border-color:var(--yellow);box-shadow:inset 0 0 0 2px var(--yellow);background:#4b5865}
+.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.result{background:#183449;padding:12px;border:1px solid #7ea1b4;border-radius:11px}.result strong{display:block;font-size:clamp(1.23rem,4vw,1.65rem)}
+#compare{font-weight:750}.hud{position:fixed;bottom:max(11px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 18px));z-index:10;border:3px solid var(--mint);border-radius:17px;background:#13383f;padding:12px;box-shadow:0 7px 24px #000a}
+.hud[hidden],[hidden]{display:none!important}.hud .current{font-size:clamp(1.1rem,5vw,1.5rem);font-weight:800;margin:5px 0 10px;overflow-wrap:anywhere}
+.hud button{width:100%}.hud .secondary{min-height:43px;margin-top:8px}body.running main{padding-bottom:230px}
+footer{font-size:.85rem;color:#c9d8e7;padding-bottom:30px}
+</style></head><body><main>
+<div class="eyebrow">MindSpeak · Connect · 1.0 · Vergleichstest</div>
+<h1>Alltagssätze im Vergleich</h1>
+<p>Schreibe <strong>drei verschiedene Alltagssätze</strong> jeweils einmal ohne und einmal mit Wortvorschlägen über den Ein-Tasten-Scan. Die Reihenfolge wechselt zwischen den Sätzen. Du kannst zwischen den Durchgängen pausieren.</p>
+<div class="warning"><strong>Techniktest ohne EEG:</strong> Kein Notruf, keine Sprachausgabe, keine Übertragung oder dauerhafte Speicherung. Dies ist keine medizinische Wirksamkeitsstudie.</div>
+<section class="panel">
+<h2>Dein aktueller Testsatz</h2><p class="small" id="progress">Durchgang 1 von 6</p><div id="target" class="target">ICH BRAUCHE WASSER</div>
+<p class="small">Die Zeit läuft vom Start bis der Satz korrekt fertig ist. Du kannst dich verschreiben und mit ⌫ korrigieren. Ein Leerzeichen am Schluss wird ignoriert.</p>
+<div class="controls">
+<div><label for="speed">Scan-Zeit, für beide Versuche gleich</label><select id="speed"><option value="1000" selected>1 Sekunde</option><option value="1500">1,5 Sekunden</option><option value="2000">2 Sekunden</option><option value="3000">3 Sekunden</option></select></div>
+<button class="primary" id="next" type="button">1. Versuch starten</button>
+</div><p class="small">Die vorgegebene Reihenfolge wechselt zwischen ohne und mit Vorschlägen. Beide Bedingungen haben das gleiche Scan-Tempo. Es bleibt ein erster Einzeltest, keine klinische Studie.</p>
+</section>
+<section class="panel"><h2>Dein Text</h2><div id="text" aria-live="polite">Noch kein Test begonnen</div>
+<p id="status" role="status" aria-live="polite">Starte zuerst „Ohne Vorschläge“.</p>
+<div id="matrix" class="matrix" role="group" aria-label="Scanvorschau"></div>
+<p class="small">Gelb markiert wird zuerst eine Reihe, dann das Wort oder der Buchstabe. Jede Auswahl muss bestätigt werden.</p>
+</section>
+<section class="panel"><h2>Vergleich der Ergebnisse</h2>
+<div id="results" class="results" aria-live="polite"></div>
+<p id="compare" aria-live="polite">Der Vergleich erscheint für jeden Satz nach beiden Durchgängen.</p>
+<p class="small" id="aborts">Abgebrochene Durchgänge: 0</p>
+<button id="reset" type="button">Ergebnisse zurücksetzen</button>
+<p class="small">Die Ergebnisse bleiben nur in diesem geöffneten Tab und gehen beim Neuladen verloren. Mach am Ende einen Screenshot. Die Messung zählt Auswahlbestätigungen, verwendete Wortergänzungen, Korrekturtasten (⌫) und Abbrüche.</p>
+</section>
+<section id="hud" class="hud" hidden><p class="small" id="phase">Reihe auswählen</p><p class="current" id="current">Reihe 1</p>
+<button class="primary" id="choose" type="button">Markiertes auswählen</button>
+<button class="secondary" id="cancel" type="button">Versuch abbrechen</button>
+</section>
+<footer>MindSpeak Connect 1.0 – freiwilliger Vergleich von sechs Touch-/Taster-Scandurchgängen. Keine EEG-, P300- oder Notruffunktion.</footer>
+</main>
+<script>
+/* MindSpeak 0.7 – isolated keyboard and two-stage scan; no EEG or storage. */
+(function (root) {
+  'use strict';
+  const ROWS = Object.freeze([
+    Object.freeze(['A','B','C','D','E','F']),
+    Object.freeze(['G','H','I','J','K','L']),
+    Object.freeze(['M','N','O','P','Q','R']),
+    Object.freeze(['S','T','U','V','W','X']),
+    Object.freeze(['Y','Z','Ä','Ö','Ü','ß']),
+    Object.freeze([' ','.','?','⌫','Satz sprechen','Zurück'])
+  ]);
+  class HybridComposer {
+    constructor(maxLength=300) {
+      if (!Number.isInteger(maxLength) || maxLength < 1) throw new RangeError('Invalid maxLength');
+      this.maxLength=maxLength; this.text='';
+    }
+    setText(text) {
+      if (typeof text !== 'string') throw new TypeError('String required');
+      this.text=Array.from(text).slice(0,this.maxLength).join('');
+      return this.text;
+    }
+    apply(key) {
+      if (key === '⌫') { this.text=Array.from(this.text).slice(0,-1).join('');return 'changed'; }
+      if (key === 'Zurück') return 'back';
+      if (key === 'Satz sprechen') return this.text.trim() ? 'speak' : 'empty';
+      if (!ROWS.some(r=>r.includes(key))) throw new RangeError('Unknown key');
+      if (Array.from(this.text).length >= this.maxLength) return 'full';
+      this.text+=key;
+      return 'changed';
+    }
+  }
+  class RowColumnScan {
+    constructor(rows=ROWS) {
+      if (!Array.isArray(rows) || rows.length<2 || rows.some(r=>!Array.isArray(r)||r.length!==6)) throw new TypeError('Expected at least two scan rows of six keys');
+      this.rows=rows;this.reset();
+    }
+    reset(){this.stage='row';this.index=0;this.row=0;}
+    next(){this.index=(this.index+1)%(this.stage==='row'?this.rows.length:this.rows[this.row].length);return this.index;}
+    label() {
+      return this.stage==='row'
+        ? 'Reihe '+(this.index+1)+': '+this.rows[this.index].map(k=>k===' '?'Leerzeichen':k).join(' · ')
+        : this.rows[this.row][this.index]===' ' ? 'Leerzeichen' : this.rows[this.row][this.index];
+    }
+    choose(){
+      if(this.stage==='row'){this.row=this.index;this.stage='key';this.index=0;return {kind:'row',row:this.row};}
+      const key=this.rows[this.row][this.index];
+      if(key==='Zurück'){this.reset();return {kind:'back'};}
+      this.reset();return {kind:'key',key};
+    }
+  }
+  root.MindSpeakHybridInput={ROWS,HybridComposer,RowColumnScan};
+  if(typeof module==='object' && module.exports) module.exports={ROWS,HybridComposer,RowColumnScan};
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script>
+/* MindSpeak Connect 0.8 – local, deterministic suggestions; no network, no model. */
+(function(root){
+'use strict';
+const DICTIONARY=Object.freeze([
+ 'ICH','MÖCHTE','BRAUCHE','HABE','BIN','WILL','KEINE','TAG','MIR','GEHT','GUT','BITTE','DANKE',
+ 'HALLO','JA','NEIN','HILFE','WASSER','SCHMERZEN','PAUSE','ESSEN','TRINKEN',
+ 'TOILETTE','KANN','NICHT','DU','SIE','MEIN','MEINE','MICH','ETWAS','MEHR','WENIGER',
+ 'HEISS','KALT','HUNGER','DURST','MÜDE','ANGST','MUSS','RUHEN','HELFEN','HOLEN',
+ 'JA','JETZT','SPÄTER','ZU','VIEL','WIE','WARUM','WO','WAS','WANN','OKAY',
+ 'GUTEN','MORGEN','ABEND','NACHT','VERSTEHE','BITTE','SEHR','ES','IST','DAS',
+ 'WAR','EIN','EINE','DER','DIE','UND','ODER','NEU','SORGE','MACHEN','GEHEN'
+]);
+const UNIQUE=Object.freeze([...new Set(DICTIONARY)]);
+const NEXT=Object.freeze({
+ 'ICH':['MÖCHTE','BRAUCHE','HABE','BIN','KANN','WILL'],
+ 'MÖCHTE':['BITTE','WASSER','ESSEN','TRINKEN','RUHEN','MEHR'],
+ 'BRAUCHE':['HILFE','WASSER','EINE','PAUSE','ETWAS','MEHR'],
+ 'HABE':['SCHMERZEN','HUNGER','DURST','ANGST','EINE','KEINE'],
+ 'BITTE':['HELFEN','WASSER','MEHR','NICHT','SPÄTER','JETZT'],
+ 'MIR':['GEHT','IST','BITTE','HILFE'],
+ 'ES':['IST','GEHT','WAR'],
+ 'GUTEN':['MORGEN','ABEND','TAG']
+});
+const INITIAL=Object.freeze(['ICH','JA','NEIN','BITTE','DANKE','HALLO']);
+const CHARS=/[A-Za-zÄÖÜäöüßẞ]/u;
+function parseContext(text){
+ if(typeof text!=='string')throw new TypeError('Text required');
+ const match=text.match(/([A-Za-zÄÖÜäöüßẞ]+)$/u);
+ const prefix=match?match[1].toLocaleUpperCase('de-DE'):'';
+ const before=match?text.slice(0,-match[1].length):text;
+ const words=before.trim().split(/[^A-Za-zÄÖÜäöüßẞ]+/u).filter(Boolean);
+ const previous=words.length?words[words.length-1].toLocaleUpperCase('de-DE'):'';
+ return {prefix,previous};
+}
+function suggestWords(text,limit=6){
+ if(!Number.isInteger(limit)||limit<0||limit>6)throw new RangeError('Invalid limit');
+ if(limit===0)return [];
+ const {prefix,previous}=parseContext(text);
+ const preferred=NEXT[previous]||INITIAL;
+ const ordering=[...preferred,...UNIQUE];
+ const out=[];
+ for(const item of ordering){
+   if(!item.startsWith(prefix)||item===prefix||out.includes(item))continue;
+   out.push(item);
+   if(out.length===limit)break;
+ }
+ return out;
+}
+function completeWord(text,suggestion,maxLength=300){
+ if(typeof text!=='string'||typeof suggestion!=='string'||!Number.isInteger(maxLength)||maxLength<1)throw new TypeError('Invalid completion input');
+ if(!UNIQUE.includes(suggestion))throw new RangeError('Unknown suggestion');
+ const end=text.match(/([A-Za-zÄÖÜäöüßẞ]+)$/u);
+ const prefix=end?end[1]:'';
+ if(prefix&&!suggestion.startsWith(prefix.toLocaleUpperCase('de-DE')))return {ok:false,text,reason:'prefix-mismatch'};
+ if(prefix.toLocaleUpperCase('de-DE')===suggestion)return {ok:false,text,reason:'already-complete'};
+ // Append one space after a consciously selected whole word.
+ const output=text.slice(0,text.length-prefix.length)+suggestion+' ';
+ if(Array.from(output).length>maxLength)return {ok:false,text,reason:'max-length'};
+ return {ok:true,text:output,reason:'inserted'};
+}
+root.MindSpeakSuggestions={suggestWords,completeWord,parseContext};
+if(typeof module==='object'&&module.exports)module.exports={suggestWords,completeWord,parseContext};
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+</script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const {HybridComposer,RowColumnScan,ROWS}=window.MindSpeakHybridInput;
+const {suggestWords,completeWord}=window.MindSpeakSuggestions;
+const CASES=Object.freeze([
+  Object.freeze({text:'ICH BRAUCHE WASSER',name:'Grundbedürfnis',order:['no','yes']}),
+  Object.freeze({text:'MIR IST KALT',name:'Befinden',order:['yes','no']}),
+  Object.freeze({text:'BITTE TÜR ÖFFNEN',name:'Mit unbekannten Wörtern',order:['no','yes']})
+]);
+const PLAN=CASES.flatMap((test,i)=>test.order.map(kind=>({caseIndex:i,kind,target:test.text})));
+const composer=new HybridComposer();
+const speed=$('speed'),nextButton=$('next'),matrix=$('matrix'),hud=$('hud'),
+  phase=$('phase'),current=$('current'),status=$('status'),draft=$('text'),
+  progress=$('progress'),targetLabel=$('target'),resultsElement=$('results');
+let active=null,scanner=null,timer=null;
+let results=Array(PLAN.length).fill(null),stops=0,fixedSpeed=null;
+
+function currentIndex(){return results.findIndex(r=>r===null);}
+function formatSeconds(s){return s.toFixed(1).replace('.',',')+' s';}
+function setText(){draft.textContent=composer.text||'Noch kein Zeichen eingegeben';}
+function renderPlan(){
+  const index=currentIndex(),finished=index<0;
+  if(finished){
+    progress.textContent='Alle 6 Durchgänge abgeschlossen.';
+    targetLabel.textContent='Alle Testsätze fertig';
+    nextButton.textContent='Alle Durchgänge abgeschlossen';
+    nextButton.disabled=true;
+  }else{
+    const item=PLAN[index],wording=item.kind==='yes'?'MIT':'OHNE';
+    progress.textContent='Durchgang '+(index+1)+' von '+PLAN.length+' · '+CASES[item.caseIndex].name+' · '+wording+' Wortvorschläge';
+    targetLabel.textContent=item.target;
+    nextButton.textContent=(index+1)+'. Versuch starten ('+wording+' Vorschläge)';
+    nextButton.disabled=active!==null;
+  }
+  speed.disabled=active!==null||fixedSpeed!==null;
+  $('reset').disabled=active!==null;
+}
+function showResults(){
+  resultsElement.replaceChildren();
+  for(let i=0;i<CASES.length;i++){
+    const card=document.createElement('div');card.className='result';
+    const title=document.createElement('strong');title.textContent=CASES[i].text;card.appendChild(title);
+    for(const kind of ['no','yes']){
+      const idx=PLAN.findIndex(x=>x.caseIndex===i&&x.kind===kind);
+      const r=results[idx];
+      const p=document.createElement('p');
+      p.textContent=(kind==='no'?'Ohne':'Mit')+' Vorschläge: '+
+        (r?formatSeconds(r.seconds)+' · '+r.presses+' Bestätigungen · '+r.corrections+' Korrekturen · '+r.wordPicks+' Wortergänzungen':'ausstehend');
+      card.appendChild(p);
+    }
+    resultsElement.appendChild(card);
+  }
+  const completed=results.filter(Boolean).length;
+  $('aborts').textContent='Abgebrochene Durchgänge: '+stops;
+  if(completed===0){$('compare').textContent='Noch keine vollständige Messung.';return;}
+  const pairs=CASES.map((_,i)=>{
+    const a=results[PLAN.findIndex(x=>x.caseIndex===i&&x.kind==='no')];
+    const b=results[PLAN.findIndex(x=>x.caseIndex===i&&x.kind==='yes')];
+    return a&&b?{a,b}:null;
+  }).filter(Boolean);
+  if(!pairs.length){$('compare').textContent=completed+' von 6 Durchgängen erfasst. Zeitvergleich erst nach einem vollständigen Satzpaar.';return;}
+  const aSum=pairs.reduce((x,p)=>x+p.a.seconds,0),bSum=pairs.reduce((x,p)=>x+p.b.seconds,0);
+  const d=aSum-bSum;
+  const diff=aSum>0?100*d/aSum:0;
+  $('compare').textContent='Paarvergleiche: '+pairs.length+' von 3. '
+    +(d>=0?'Mit Vorschlägen insgesamt '+Math.abs(d).toFixed(1).replace('.',',')+' s ('+Math.abs(diff).toFixed(1).replace('.',',')+' %) schneller.'
+          :'Mit Vorschlägen insgesamt '+Math.abs(d).toFixed(1).replace('.',',')+' s ('+Math.abs(diff).toFixed(1).replace('.',',')+' %) langsamer.')
+    +' Nur vollständige Paare berücksichtigt; nicht auf andere Personen verallgemeinerbar.';
+}
+function setMatrix(){
+  if(!active)return;
+  active.proposals=active.kind==='yes'?suggestWords(composer.text):[];
+  const rows=active.proposals.length
+    ? [[...active.proposals,...Array(6-active.proposals.length).fill('–')],...ROWS]:ROWS;
+  scanner=new RowColumnScan(rows);
+  matrix.replaceChildren();
+  rows.forEach((r,index)=>{
+    const group=document.createElement('div');group.className='matrix-row';group.dataset.active='false';
+    const cells=[];
+    for(const word of r){
+      const cell=document.createElement('div');cell.className='cell';cell.dataset.active='false';
+      cell.textContent=word===' '?'␣':word;group.appendChild(cell);cells.push(cell);
+    }
+    group._cells=cells;group.dataset.row=String(index);matrix.appendChild(group);
+  });
+  renderScan();
+}
+function renderScan(){
+  if(!active||!scanner)return;
+  phase.textContent=scanner.stage==='row'?'Reihe auswählen':'Wort oder Buchstabe auswählen';
+  current.textContent=scanner.label();
+  for(const [r,row] of Array.from(matrix.children).entries()){
+    row.dataset.active=String(scanner.stage==='row'&&scanner.index===r);
+    row._cells.forEach((cell,c)=>{cell.dataset.active=String(scanner.stage==='key'&&scanner.row===r&&scanner.index===c);});
+  }
+}
+function runTimer(){
+  if(timer!==null)clearInterval(timer);
+  timer=setInterval(()=>{if(active){scanner.next();renderScan();}},active.speedMs);
+}
+function stopRunning(message){
+  if(timer!==null)clearInterval(timer);
+  timer=null;active=null;scanner=null;hud.hidden=true;document.body.classList.remove('running');
+  if(message)status.textContent=message;
+  renderPlan();
+}
+function start(){
+  const index=currentIndex();
+  if(active||index<0)return;
+  const ms=fixedSpeed??Number(speed.value);
+  if(![1000,1500,2000,3000].includes(ms))return;
+  if(fixedSpeed===null)fixedSpeed=ms;
+  speed.value=String(ms);
+  const item=PLAN[index];
+  composer.setText('');
+  active={index,kind:item.kind,target:item.target,speedMs:ms,started:performance.now(),
+    presses:0,corrections:0,wordPicks:0,proposals:[]};
+  hud.hidden=false;document.body.classList.add('running');
+  setText();setMatrix();runTimer();renderPlan();
+  status.textContent='Die Zeitmessung läuft. Erst Reihe, dann Buchstabe oder vorgeschlagenes Wort auswählen.';
+  $('choose').blur();
+}
+function finish(){
+  if(!active)return;
+  const t=active;
+  results[t.index]={seconds:Math.max(0,(performance.now()-t.started)/1000),presses:t.presses,
+    corrections:t.corrections,wordPicks:t.wordPicks,speedMs:t.speedMs,caseIndex:PLAN[t.index].caseIndex,kind:t.kind};
+  stopRunning('Richtig! '+formatSeconds(results[t.index].seconds)+' · '+t.presses+' Bestätigungen. Du kannst vor dem nächsten Durchgang pausieren.');
+  showResults();renderPlan();
+}
+function choose(){
+  if(!active||!scanner)return;
+  const isSuggestion=scanner.stage==='key'&&active.proposals.length>0&&scanner.row===0;
+  const answer=scanner.choose();
+  active.presses++;
+  if(answer.kind==='row'||answer.kind==='back'){
+    renderScan();runTimer();return;
+  }
+  if(isSuggestion){
+    if(active.proposals.includes(answer.key)){
+      const done=completeWord(composer.text,answer.key,300);
+      if(done.ok){composer.setText(done.text);active.wordPicks++;}
+    }
+  }else if(answer.key==='⌫'){
+    active.corrections++;composer.apply(answer.key);
+  }else if(answer.key!=='Satz sprechen'){
+    composer.apply(answer.key);
+  }
+  setText();
+  if(composer.text.trimEnd()===active.target){finish();return;}
+  setMatrix();runTimer();
+  status.textContent='Auswahl eingetragen; nächste Auswahl selbst bestätigen. Keine automatische Ausgabe.';
+}
+function cancel(message){
+  if(!active)return;
+  stops++;
+  stopRunning(message||'Durchgang abgebrochen und nicht gewertet. Du kannst ihn wiederholen.');
+  showResults();
+}
+function reset(){
+  if(active)return;
+  results=Array(PLAN.length).fill(null);stops=0;fixedSpeed=null;composer.setText('');
+  draft.textContent='Noch kein Test begonnen';matrix.replaceChildren();
+  status.textContent='Alle Messwerte zurückgesetzt. Bereit für den ersten Durchgang.';
+  showResults();renderPlan();
+}
+nextButton.addEventListener('click',start);
+$('choose').addEventListener('click',choose);
+$('cancel').addEventListener('click',()=>cancel());
+$('reset').addEventListener('click',reset);
+document.addEventListener('keydown',event=>{
+ if(event.altKey||event.ctrlKey||event.metaKey||event.repeat)return;
+ if(event.key==='Escape'&&active){cancel('Versuch mit Escape abgebrochen, keine Messung gespeichert.');return;}
+ if(event.code==='Space'&&active){
+   if(event.target instanceof Element&&event.target.closest('button,select'))return;
+   event.preventDefault();choose();
+ }
+});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden&&active)cancel('Versuch beim Wechsel der App abgebrochen und nicht gewertet.');
+});
+showResults();renderPlan();
+})();
+</script>
+</body></html>
