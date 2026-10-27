@@ -1,0 +1,27 @@
+name: MindSpeak 1.1 vocabulary crossover tests
+
+on:
+  push:
+    branches:
+      - feature/connect11-vocabulary-evaluation
+  pull_request:
+    paths:
+      - word-suggestions-1.1.js
+      - mindspeak-vocabulary-1.1.html
+      - tests/connect11-vocabulary.test.cjs
+      - .github/workflows/connect11-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check word-suggestions-1.1.js
+      - run: node --test tests/connect11-vocabulary.test.cjs
