@@ -1,0 +1,25 @@
+name: MindSpeak 1.2.1 guarded ABC benchmark
+
+on:
+  push:
+    branches:
+      - fix/connect121-abc-benchmark-validity
+  pull_request:
+    paths:
+      - mindspeak-abc-benchmark-1.2.1.html
+      - tests/connect121-validity.test.cjs
+      - .github/workflows/connect121-guard-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect121-validity.test.cjs
