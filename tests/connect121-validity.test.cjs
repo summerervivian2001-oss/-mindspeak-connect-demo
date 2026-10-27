@@ -119,14 +119,17 @@ test('combined mode preserves suggestions and shows a scannable ABC shortcut',()
 });
 
 test('ABC trials cannot type letters or predicted words until real ABC selection',()=>{
-  const {get,chooseItem}=bootstrap();
+  const {get,chooseItem,tick,press}=bootstrap();
   // Complete first (combined) condition to reach required ABC condition.
   get('next').click();
   for(const char of 'MEIN ARM KRIBBELT')chooseItem(char);
   assert.equal(get('hud').hidden,true);
   get('next').click();
   assert.equal(get('matrix').children.length,7);
-  chooseItem('M'); // tries to enter row of letters too early
+  // Select an illegal letter row (row 4) with one actual button press.
+  // The UI rejects the row and returns to the first row; no second key press follows.
+  for(let i=0;i<3;i++)tick();
+  press();
   assert.equal(get('text').textContent,'Noch kein Zeichen eingegeben');
   assert.equal(get('matrix').children.length,7);
   chooseItem('ICH'); // tries to use proposed whole word too early
