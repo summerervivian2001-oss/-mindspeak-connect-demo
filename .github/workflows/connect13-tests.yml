@@ -1,0 +1,25 @@
+name: MindSpeak 1.3 one-switch recovery
+
+on:
+  push:
+    branches:
+      - feature/connect13-recoverable-single-switch
+  pull_request:
+    paths:
+      - mindspeak-connect-1.3.html
+      - tests/connect13-undo-scan.test.cjs
+      - .github/workflows/connect13-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect13-undo-scan.test.cjs
