@@ -108,8 +108,8 @@ test('new v1.1 terms exist only in expanded predictor; held-out symptom words st
   const old=context.MindSpeakSuggestions;
   const modern=context.MindSpeakSuggestionsV11;
   for(const word of ['MEDIKAMENTE','FENSTER','ÖFFNEN','TÜR']){
-    assert.ok(modern.suggestWords(word.slice(0,3)).includes(word),'new dictionary missing '+word);
-    assert.ok(!old.suggestWords(word.slice(0,3)).includes(word),'old dictionary unexpectedly knows '+word);
+    assert.ok(modern.suggestWords(word.slice(0,Math.min(3,word.length-1))).includes(word),'new dictionary missing '+word);
+    assert.ok(!old.suggestWords(word.slice(0,Math.min(3,word.length-1))).includes(word),'old dictionary unexpectedly knows '+word);
   }
   for(const word of ['RÜCKEN','JUCKT']){
     assert.ok(!modern.suggestWords(word.slice(0,3)).includes(word),'control word accidentally learned '+word);
