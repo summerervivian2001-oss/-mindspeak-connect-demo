@@ -115,7 +115,7 @@ test('new v1.1 terms exist only in expanded predictor; held-out symptom words st
     assert.ok(!modern.suggestWords(word.slice(0,3)).includes(word),'control word accidentally learned '+word);
   }
   assert.equal(modern.completeWord('ICH BRAUCHE MED','MEDIKAMENTE').text,'ICH BRAUCHE MEDIKAMENTE ');
-  assert.throws(()=>modern.completeWord('','<img>'),RangeError);
+  assert.throws(()=>modern.completeWord('','<img>'),/Unknown suggestion/);
 });
 test('new dictionary adds medically relevant suggestions without automatic commands',()=>{
   const {context}=bootstrap();
