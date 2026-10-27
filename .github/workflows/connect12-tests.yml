@@ -1,0 +1,25 @@
+name: MindSpeak 1.2 one-switch letter shortcut
+
+on:
+  push:
+    branches:
+      - feature/connect12-single-switch-letter-shortcut
+  pull_request:
+    paths:
+      - mindspeak-connect-1.2.html
+      - tests/connect12-letter-shortcut.test.cjs
+      - .github/workflows/connect12-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect12-letter-shortcut.test.cjs
