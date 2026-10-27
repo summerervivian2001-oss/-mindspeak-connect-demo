@@ -143,8 +143,8 @@ test('ABC trials cannot type letters or predicted words until real ABC selection
 test('simulated script keeps combined-word mode available outside shortcut condition',()=>{
   const {get,chooseItem}=bootstrap();
   get('next').click();
-  chooseItem('MEIN');
-  assert.equal(get('text').textContent,'MEIN ');
+  chooseItem('ICH');
+  assert.equal(get('text').textContent,'ICH ');
   assert.equal(get('matrix').children.length,7);
   get('cancel').click();
 });
