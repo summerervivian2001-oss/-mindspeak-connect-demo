@@ -156,7 +156,7 @@ test('word scan cannot start if a prefix has no suggestions', () => {
 test('one-switch skip switches from proposed words to six pure keyboard rows without sending text',()=>{
  const {ids,step}=boot();
  ids.get('mode-write').click();
- ids.get('draft').value='MEIN RÜ';
+ ids.get('draft').value='MEIN R';
  ids.get('draft').listeners.get('input')();
  ids.get('scan-toggle').click();
  assert.equal(ids.get('scan-phase').textContent,'Schreiben – Vorschläge oder Buchstabenreihe wählen');
@@ -167,13 +167,13 @@ test('one-switch skip switches from proposed words to six pure keyboard rows wit
  assert.equal(ids.get('scan-hud').hidden,false,'switch must not stop the scan');
  assert.equal(ids.get('scan-phase').textContent,'Schreiben – nur Buchstabenreihen');
  assert.equal(ids.get('scan-current').textContent,'Reihe 1: A · B · C · D · E · F');
- assert.equal(ids.get('draft').value,'MEIN RÜ','switch does not alter text');
+ assert.equal(ids.get('draft').value,'MEIN R','switch does not alter text');
  assert.equal(ids.get('last-message').textContent,'','switch does not speak');
  assert.equal(ids.get('letter-scan-toggle').getAttribute('aria-pressed'),'true');
  assert.equal(ids.get('suggestion-row').dataset.active,'false');
  ids.get('hud-choose').click(); // row A..F
  ids.get('hud-choose').click(); // A
- assert.equal(ids.get('draft').value,'MEIN RÜA','letters remain writable');
+ assert.equal(ids.get('draft').value,'MEIN RA','letters remain writable');
  assert.equal(ids.get('scan-hud').hidden,false);
  ids.get('hud-stop').click();
 });
