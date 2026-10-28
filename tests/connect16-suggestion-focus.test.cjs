@@ -640,13 +640,13 @@ test('1.6 joystick letter OK focuses valid next word without inserting automatic
  ids.get('joy-right').click(); // B
  ids.get('joy-confirm').click(); // type B via explicit OK
  assert.equal(ids.get('draft').value,'B');
- assert.match(ids.get('joystick-current').textContent,/BRAUCHE/);
+ assert.match(ids.get('joystick-current').textContent,/BITTE/);
  assert.equal(ids.get('suggestion-row').children[0].dataset.navActive,'true');
  assert.equal(ids.get('last-message').textContent,'');
  assert.match(ids.get('draft-status').textContent,/OK übernimmt/);
  // Choosing that word still requires deliberate confirmation.
  ids.get('joy-confirm').click();
- assert.equal(ids.get('draft').value,'BRAUCHE ');
+ assert.equal(ids.get('draft').value,'BITTE ');
  assert.equal(ids.get('last-message').textContent,'');
 });
 test('1.6 one Down returns to the exact last letter key and can continue typing',()=>{
