@@ -109,7 +109,7 @@ test('UI counts all four trials, stops automatically and shows grouped compariso
   for(let n=0;n<count;n++){step(.1);act(els,dir);}
   step(.1);act(els,'ok');
   assert.equal(els.get('pad').hidden,true);
-  assert.equal(els.get('draft').textContent,i>=2?'Alle Fehler korrigiert':i===0?'ICH ':i===1?'ICH A':'ICH A');
+  assert.equal(els.get('draft').textContent,i===3?'Alle Fehler korrigiert':i===0?'ICH ':'ICH A');
  }
  assert.match(els.get('progress').textContent,/Alle vier/);
  assert.equal(els.get('results').children.length,4);
