@@ -1,0 +1,25 @@
+name: MindSpeak 1.6.1 writing ABBA speed benchmark
+
+on:
+  push:
+    branches:
+      - feature/connect16-writing-speed-benchmark
+  pull_request:
+    paths:
+      - mindspeak-writing-ab-1.6.1.html
+      - tests/connect16-writing-ab.test.cjs
+      - .github/workflows/connect16-writing-ab.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect16-writing-ab.test.cjs
