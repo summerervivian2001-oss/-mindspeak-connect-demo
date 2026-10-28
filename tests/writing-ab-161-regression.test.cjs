@@ -80,7 +80,7 @@ function boot(options={}) {
     ids.get('auto-suggest-focus').checked=false;
     ids.get('auto-suggest-focus').listeners.get('change')();
   }
-  return { ids, doc, step: () => { assert.ok(callback); clock += 2000; callback(); } };
+  return { ids, doc, step: () => { assert.ok(callback); clock += 2000; callback(); }, advance:(ms)=>{clock+=ms;} };
 }
 
 test('real script initialization binds the free-writing button without ReferenceError', () => {
@@ -786,4 +786,106 @@ test('1.6.1 correct return anchor remains an optional feature and never auto-com
  assert.match(ids.get('joystick-current').textContent,/BRAUCHE/);
  assert.equal(ids.get('draft').value,'B');
  assert.equal(ids.get('last-message').textContent,'');
+});
+
+
+function benchRows(ids){
+ const rows=[];
+ if(!ids.get('suggestion-wrap').hidden)rows.push(ids.get('suggestion-row').children);
+ for(const group of ids.get('keyboard').children)rows.push(group.children);
+ rows.push(ids.get('control-row').children);
+ return rows;
+}
+function selectedLocation(ids){
+ const rows=benchRows(ids);
+ for(let r=0;r<rows.length;r++)for(let c=0;c<rows[r].length;c++){
+  if(rows[r][c].dataset.navActive==='true')return {rows,r,c,node:rows[r][c]};
+ }
+ throw Error('No selected virtual Joystick key found');
+}
+function benchPress(ids,advance,action){
+ advance(240);
+ ids.get('joy-'+action).click();
+}
+function navigateToKey(ids,advance,target){
+ for(let n=0;n<140;n++){
+  const {rows,r,c,node}=selectedLocation(ids);
+  if(node===target)return;
+  const tr=rows.findIndex(row=>row.includes(target));
+  if(tr<0)throw Error('Target not displayed');
+  const tc=rows[tr].indexOf(target);
+  assert.equal(target.disabled,false,'Target key disabled');
+  if(r!==tr){
+   const down=(tr-r+rows.length)%rows.length,up=(r-tr+rows.length)%rows.length;
+   benchPress(ids,advance,down<=up?'down':'up');
+  }else{
+   const right=(tc-c+rows[r].length)%rows[r].length,left=(c-tc+rows[r].length)%rows[r].length;
+   benchPress(ids,advance,right<=left?'right':'left');
+  }
+ }
+ throw Error('Navigation exceeded 140 direction presses');
+}
+function submitWord(ids,advance,word,isLast){
+ function availableSuggestion(){
+  if(ids.get('suggestion-wrap').hidden)return null;
+  return ids.get('suggestion-row').children.find(b=>!b.disabled&&b.textContent===word);
+ }
+ let direct=availableSuggestion();
+ if(direct){
+  navigateToKey(ids,advance,direct);benchPress(ids,advance,'confirm');return;
+ }
+ for(const letter of word){
+  const key=ids.get('keyboard').children.flatMap(row=>row.children)
+   .find(b=>b.textContent===letter);
+  assert.ok(key,'Cannot find keyboard key '+letter);
+  navigateToKey(ids,advance,key);
+  benchPress(ids,advance,'confirm');
+  if(ids.get('benchmark-results').hidden===false)return;
+  direct=availableSuggestion();
+  if(direct){
+   navigateToKey(ids,advance,direct);benchPress(ids,advance,'confirm');return;
+  }
+ }
+ if(!isLast){
+  const space=ids.get('keyboard').children.flatMap(row=>row.children)
+   .find(b=>b.textContent==='␣');
+  navigateToKey(ids,advance,space);benchPress(ids,advance,'confirm');
+ }
+}
+
+test('A/B real-app benchmark starts at empty draft with visible joystick and no fabricated result',()=>{
+ const {ids}=boot();
+ ids.get('benchmark-start').click();
+ assert.equal(ids.get('input-method').value,'joystick');
+ assert.equal(ids.get('write-view').hidden,false);
+ assert.equal(ids.get('joystick-demo').hidden,false);
+ assert.equal(ids.get('draft').value,'');
+ assert.equal(ids.get('benchmark-results').hidden,true);
+ assert.match(ids.get('benchmark-state').textContent,/Messung läuft/);
+ assert.equal(ids.get('last-message').textContent,'');
+});
+test('A/B benchmark records explicit virtual joystick presses but not a direct text edit',()=>{
+ const {ids}=boot();
+ ids.get('benchmark-start').click();
+ ids.get('joy-confirm').click();
+ assert.equal(ids.get('draft').value,'ICH ');
+ assert.equal(ids.get('benchmark-results').hidden,true);
+ ids.get('draft').value='ICH BRAUCHE WASSER UND MIR IST KALT';
+ ids.get('draft').listeners.get('input')();
+ assert.equal(ids.get('benchmark-results').hidden,true,'Manual textarea entry must cancel, not produce a valid measurement');
+ assert.match(ids.get('benchmark-state').textContent,/abgebrochen/);
+});
+test('A/B benchmark completes the identical whole sentence using real joystick keys and real suggestions',()=>{
+ const {ids,advance}=boot();
+ ids.get('benchmark-start').click();
+ const words=['ICH','BRAUCHE','WASSER','UND','MIR','IST','KALT'];
+ for(let i=0;i<words.length;i++){
+  submitWord(ids,advance,words[i],i===words.length-1);
+  if(i<words.length-1)assert.equal(ids.get('benchmark-results').hidden,true,'Should not finish before full target sentence');
+ }
+ assert.equal(ids.get('draft').value.trim(),'ICH BRAUCHE WASSER UND MIR IST KALT');
+ assert.equal(ids.get('last-message').textContent,'','No spoken output without explicit speech action');
+ assert.equal(ids.get('benchmark-results').hidden,false,'Exact target should finish measurement');
+ assert.match(ids.get('benchmark-summary').textContent,/Sekunden · \d+ Pfeildrücke · \d+ OK · 0 Korrekturen/);
+ assert.match(ids.get('benchmark-state').textContent,/Messung abgeschlossen/);
 });
