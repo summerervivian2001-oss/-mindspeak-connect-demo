@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1827">
+<title>MindSpeak 1.4.2 vs. 1.5 – Rückgängig im Joystick-Test</title>
+<style>
+:root{color-scheme:dark;--bg:#091725;--panel:#122438;--line:#49617a;--txt:#f1f7fb;--muted:#cbdce7;--mint:#90eed1;--yellow:#ffe48a}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font:16px/1.45 system-ui,"Segoe UI",sans-serif;margin:0}
+main{width:min(680px,100%);padding:18px;margin:0 auto}
+h1{font-size:clamp(1.65rem,6vw,2.35rem);line-height:1.18;margin:12px 0}
+h2{font-size:1.16rem;margin:4px 0 12px}
+p{margin:9px 0}
+.muted,small{color:var(--muted)}
+.warning{border:1px solid #d5af66;border-radius:11px;padding:11px;background:#302d29}
+.panel{border:1px solid var(--line);background:var(--panel);border-radius:15px;padding:15px;margin:14px 0}
+button{font:inherit;color:var(--txt);background:#25465e;border:2px solid #a2bed0;border-radius:11px;min-height:46px;padding:9px 12px;font-weight:750;cursor:pointer}
+button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+button.primary{background:var(--mint);color:#072d2f;border-color:var(--mint)}
+button[hidden],[hidden]{display:none!important}
+.text-preview{background:#092031;border-radius:11px;padding:13px;border:1px solid #7bacc5;margin:12px 0}
+.text-preview strong{display:block;font-size:clamp(1.25rem,5vw,1.7rem);min-height:34px;white-space:pre-wrap;overflow-wrap:anywhere}
+#focus-label{border:2px solid var(--yellow);background:#3a4350;border-radius:12px;min-height:67px;padding:11px;font-weight:800;overflow-wrap:anywhere}
+.controls{display:flex;flex-wrap:wrap;gap:10px}
+.controls button{flex:1 1 180px}
+#pad:not([hidden]){position:fixed;z-index:20;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(350px,calc(100% - 24px));border:2px solid var(--mint);border-radius:15px;background:#122438;box-shadow:0 8px 30px #000c;padding:9px}
+.pad-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;max-width:270px;margin:auto}
+.pad-grid button{min-height:44px;padding:4px 5px;font-size:1.1rem}
+#up,#down{grid-column:2}
+#left{grid-column:1}
+#ok{grid-column:2}
+#right{grid-column:3}
+#ok{background:var(--mint);color:#072d2f}
+body.running main{padding-bottom:250px}
+#results{display:grid;gap:8px}
+.result{padding:9px;background:#192e41;border:1px solid #506b80;border-radius:9px}
+#comparison{font-weight:750;white-space:pre-wrap}
+footer{font-size:.83rem;color:var(--muted);padding:14px 0 34px}
+@media(max-height:540px){body.running main{padding-bottom:225px}#pad{padding:6px}#pad button{min-height:44px}}
+</style>
+</head>
+<body>
+<main>
+<p class="muted">MindSpeak · Connect · A/B-Test · 28.10.2026</p>
+<h1>Wie schnell lässt sich ein Fehlklick rückgängig machen?</h1>
+<p>Vier kurze Durchgänge: Zweimal die Navigation von <strong>1.4.2</strong>, zweimal die neue Navigation von <strong>1.5</strong>. Beide verwenden dasselbe kompakte Steuerkreuz. Wir messen Zeit, Pfeildrucke und OK-Bestätigungen.</p>
+<p class="warning"><strong>Nur Navigationstest:</strong> Eine falsche OK-Auswahl zählt als Fehlauswahl, verändert aber keinen Text. Einzig die bewusste Wahl von <strong>↶ Rückgängig</strong> beendet den Durchgang. Keine Sprachausgabe, kein EEG, kein angeschlossener Joystick und kein echter Notruf.</p>
+<section class="panel" aria-label="Aktuelle Messung">
+ <p id="progress">Durchgang 1 von 4</p>
+ <h2 id="task">Wort zurücknehmen</h2>
+ <p id="condition" class="muted">Vergleichsversion</p>
+ <div class="text-preview"><span class="muted">Zu korrigierender Text</span><strong id="draft">ICH </strong></div>
+ <p class="muted">Aufgabe: Navigiere mit den Pfeilen zu <strong>↶ Rückgängig</strong> und drücke OK.</p>
+ <p id="focus-label" aria-live="polite">Noch nicht gestartet.</p>
+ <p id="status" role="status" aria-live="polite">Starte die erste Messung, wenn du bereit bist.</p>
+ <div class="controls">
+  <button id="start" class="primary" type="button">Durchgang starten</button>
+  <button id="cancel" type="button" hidden>Versuch abbrechen</button>
+ </div>
+</section>
+<div id="pad" hidden role="group" aria-label="Virtuelles Joystick-Steuerkreuz">
+ <div class="pad-grid">
+  <button id="up" type="button" aria-label="Hoch">↑</button>
+  <button id="left" type="button" aria-label="Links">←</button>
+  <button id="ok" type="button" aria-label="Markiertes Feld wählen">OK</button>
+  <button id="right" type="button" aria-label="Rechts">→</button>
+  <button id="down" type="button" aria-label="Runter">↓</button>
+ </div>
+</div>
+<section class="panel" aria-labelledby="results-title">
+ <h2 id="results-title">Deine Ergebnisse</h2>
+ <div id="results"></div>
+ <p id="comparison">Noch keine vollständige Messung.</p>
+ <p id="aborts" class="muted">Abgebrochene Versuche: 0</p>
+ <button type="button" id="reset">Alle Ergebnisse zurücksetzen</button>
+</section>
+<footer>MindSpeak Connect · Einzelfall-Vergleich der beiden Navigationslogiken. Nicht die gesamte Schreibgeschwindigkeit. Ergebnisse nur in diesem Browser-Tab; bitte am Ende einen Screenshot machen. Ältere Demos bleiben unverändert.</footer>
+</main>
+<script>
+(function(root){
+'use strict';
+// Simplified navigation matrix with the same eight six-cell rows used in 1.4.2/1.5:
+// suggestions (0), six letter rows (1-6), actions (7).
+const ROWS=Object.freeze([
+ ['Vorschlag 1','Vorschlag 2','Vorschlag 3','Vorschlag 4','Vorschlag 5','Vorschlag 6'],
+ ['A','B','C','D','E','F'],['G','H','I','J','K','L'],
+ ['M','N','O','P','Q','R'],['S','T','U','V','W','X'],
+ ['Y','Z','Ä','Ö','Ü','ß'],['␣','.','?','⌫','Satz sprechen','Zurück'],
+ ['↶ Rückgängig','⌫','Nur ABC','Wörter an','Zurück','Scan stoppen']
+].map(row=>Object.freeze(row)));
+const PLAN=Object.freeze([
+ {condition:'old',scenario:'word',label:'Wortergänzung zurücknehmen',text:'ICH ',before:'',row:0},
+ {condition:'new',scenario:'word',label:'Wortergänzung zurücknehmen',text:'ICH ',before:'',row:0},
+ {condition:'new',scenario:'letter',label:'Fehlbuchstaben zurücknehmen',text:'ICH A',before:'ICH ',row:1},
+ {condition:'old',scenario:'letter',label:'Fehlbuchstaben zurücknehmen',text:'ICH A',before:'ICH ',row:1}
+].map(x=>Object.freeze(x)));
+const nearest=(col)=>Math.min(5,Math.max(0,col));
+class UndoTrial {
+ constructor(plan,now=()=>performance.now()){
+  if(!['old','new'].includes(plan.condition)||!['word','letter'].includes(plan.scenario))throw new Error('Invalid trial');
+  this.plan=plan;this.now=now;this.startMs=now();this.row=plan.row;this.col=0;
+  this.arrows=0;this.oks=0;this.mistakes=0;this.done=false;this.seconds=null;this.text=plan.text;
+ }
+ focused(){return ROWS[this.row][this.col];}
+ act(action){
+  if(this.done)return false;
+  if(action==='ok'){
+   this.oks++;
+   if(this.focused()==='↶ Rückgängig'){
+    this.done=true;this.seconds=Math.max(0,(this.now()-this.startMs)/1000);
+    this.text=this.plan.before;return true;
+   }
+   // Intentionally do not execute another command, just count mistakes.
+   this.mistakes++;return false;
+  }
+  const steps={up:-1,down:1,left:-1,right:1};
+  if(!(action in steps))throw new RangeError('Invalid input action');
+  this.arrows++;
+  const d=steps[action],wrap=this.plan.condition==='new';
+  if(action==='left'||action==='right'){
+   this.col=wrap?(this.col+d+6)%6:nearest(this.col+d);
+  }else{
+   this.row=wrap?(this.row+d+ROWS.length)%ROWS.length:Math.min(ROWS.length-1,Math.max(0,this.row+d));
+  }
+  return false;
+ }
+ summary(){return {condition:this.plan.condition,scenario:this.plan.scenario,seconds:this.seconds,arrows:this.arrows,oks:this.oks,mistakes:this.mistakes,completed:this.done};}
+}
+root.MindSpeakUndoAB={ROWS,PLAN,UndoTrial};
+if(typeof module==='object'&&module.exports)module.exports={ROWS,PLAN,UndoTrial};
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const {PLAN,UndoTrial}=window.MindSpeakUndoAB;
+let index=0,active=null,aborts=0,results=Array(PLAN.length).fill(null);
+function seconds(n){return n.toFixed(1).replace('.',',')+' s';}
+function describeFocus(){return active?'Markiert: '+active.focused()+' · Reihe '+(active.row+1)+' / 8 · Feld '+(active.col+1)+' / 6':'Noch nicht gestartet.';}
+function showResults(){
+ const wrap=$('results');wrap.replaceChildren();
+ results.forEach((r,i)=>{
+  const div=document.createElement('div');div.className='result';
+  const p=PLAN[i];
+  div.textContent=(i+1)+'. '+(p.scenario==='word'?'Wort':'Buchstabe')+' · '+(p.condition==='old'?'1.4.2':'1.5')+': '
+   +(r?seconds(r.seconds)+' · '+r.arrows+' Pfeildrucke · '+r.oks+' OK · '+r.mistakes+' Fehlauswahlen':'ausstehend');
+  wrap.appendChild(div);
+ });
+ $('aborts').textContent='Abgebrochene Versuche: '+aborts;
+ if(results.some(x=>!x)){$('comparison').textContent='Gesamtvergleich nach allen vier abgeschlossenen Durchgängen.';return;}
+ const old=[results[0],results[3]],neu=[results[1],results[2]];
+ const total=arr=>arr.reduce((a,x)=>a+x.seconds,0),sum=(arr,key)=>arr.reduce((a,x)=>a+x[key],0);
+ const oldSec=total(old),newSec=total(neu),delta=oldSec-newSec;
+ $('comparison').textContent='1.4.2: '+seconds(oldSec)+' · '+sum(old,'arrows')+' Pfeile · '+sum(old,'oks')+' OK.'
+  +'\n1.5: '+seconds(newSec)+' · '+sum(neu,'arrows')+' Pfeile · '+sum(neu,'oks')+' OK.'
+  +'\n1.5 war '+seconds(Math.abs(delta))+(delta>=0?' schneller':' langsamer')+' ('+(oldSec>0?Math.abs(delta/oldSec*100):0).toFixed(1).replace('.',',')+' %).'
+  +' Nur zwei kurze Aufgaben pro Variante, keine Aussage zur Gesamtkommunikationsleistung.';
+}
+function render(){
+ const p=PLAN[index];
+ $('start').hidden=Boolean(active)||index>=PLAN.length;
+ $('cancel').hidden=!active;
+ $('pad').hidden=!active;
+ document.body.classList.toggle('running',Boolean(active));
+ $('progress').textContent=index>=PLAN.length?'Alle vier Durchgänge geschafft.':'Durchgang '+(index+1)+' von '+PLAN.length;
+ $('task').textContent=index>=PLAN.length?'Fertig':p.label;
+ $('condition').textContent=index>=PLAN.length?'':p.condition==='old'?'Navigation wie 1.4.2 · ohne Rundlauf':'Navigation wie 1.5 · mit Rundlauf';
+ $('draft').textContent=active?active.text:index>=PLAN.length?'Alle Fehler korrigiert':p.text;
+ $('focus-label').textContent=describeFocus();
+ $('start').textContent=index>=PLAN.length?'Fertig':'Durchgang '+(index+1)+' starten';
+}
+function begin(){
+ if(active||index>=PLAN.length)return;
+ active=new UndoTrial(PLAN[index]);
+ $('status').textContent='Messung läuft. Navigiere zum Feld „↶ Rückgängig“ und bestätige nur dieses Feld mit OK.';
+ render();
+}
+function act(action){
+ if(!active)return;
+ const done=active.act(action);
+ if(done){
+  const r=active.summary();results[index]=r;active=null;index++;
+  $('status').textContent='Rückgängig bestätigt: '+seconds(r.seconds)+' · '+r.arrows+' Pfeildrucke · '+r.oks+' OK. Du kannst vor dem nächsten Durchgang pausieren.';
+  showResults();
+ }
+ render();
+}
+function cancel(){
+ if(!active)return;
+ active=null;aborts++;
+ $('status').textContent='Nicht gewertet. Starte denselben Durchgang erneut.';
+ render();showResults();
+}
+function reset(){
+ if(active)return;
+ index=0;aborts=0;results=Array(PLAN.length).fill(null);
+ $('status').textContent='Ergebnisse zurückgesetzt. Bereit für Durchgang 1.';
+ showResults();render();
+}
+$('start').addEventListener('click',begin);
+$('cancel').addEventListener('click',cancel);
+$('reset').addEventListener('click',reset);
+for(const [id,action] of [['up','up'],['down','down'],['left','left'],['right','right'],['ok','ok']]){
+ $(id).addEventListener('click',()=>act(action));
+}
+document.addEventListener('keydown',event=>{
+ if(!active||event.altKey||event.ctrlKey||event.metaKey||event.repeat)return;
+ if(event.target instanceof Element&&event.target.closest('button,input,select,textarea'))return;
+ const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Enter:'ok'};
+ if(map[event.key]){event.preventDefault();act(map[event.key]);}
+ if(event.key==='Escape'){event.preventDefault();cancel();}
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)cancel();});
+showResults();render();
+})();
+</script>
+</body></html>
