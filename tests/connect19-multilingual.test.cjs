@@ -1164,3 +1164,57 @@ test('1.9 unsupported locale cannot be used to alter language',()=>{
  assert.equal(ids.get('language-select').value,'de');
  assert.equal(ids.get('care-phrases').children[0].getAttribute('aria-label'),'Stopp, bitte hör auf. auswählen');
 });
+
+
+test('1.9 Spanish joystick/touch keyboard exposes Ñ and enters it safely',()=>{
+ const {ids}=boot();changeLanguage(ids,'es');ids.get('mode-write').click();
+ const key=ids.get('keyboard').children[4].children[2];
+ assert.equal(key.textContent,'Ñ');
+ key.click();
+ assert.equal(ids.get('draft').value,'Ñ');
+ assert.equal(ids.get('last-message').textContent,'');
+});
+test('1.9 French touch keyboard supports accented É',()=>{
+ const {ids}=boot();changeLanguage(ids,'fr');ids.get('mode-write').click();
+ const key=ids.get('keyboard').children[4].children[2];
+ assert.equal(key.textContent,'É');key.click();
+ assert.equal(ids.get('draft').value,'É');
+});
+test('1.9 English keyboard swaps foreign letters for usable punctuation',()=>{
+ const {ids}=boot();changeLanguage(ids,'en');ids.get('mode-write').click();
+ const key=ids.get('keyboard').children[4].children[2];
+ assert.equal(key.textContent,',');key.click();
+ assert.equal(ids.get('draft').value,',');
+});
+test('1.9 Spanish one-switch letter scan includes Ñ in the fifth keyboard row',()=>{
+ const {ids,step}=boot();changeLanguage(ids,'es');ids.get('mode-write').click();
+ ids.get('letter-scan-toggle').click();
+ ids.get('scan-toggle').click();
+ for(let i=0;i<4;i++)step();
+ assert.match(ids.get('scan-current').textContent,/Ñ/);
+ assert.equal(ids.get('last-message').textContent,'');
+});
+test('1.9 switching back to German restores German keyboard keys',()=>{
+ const {ids}=boot();changeLanguage(ids,'es');changeLanguage(ids,'de');
+ const key=ids.get('keyboard').children[4].children[2];
+ assert.equal(key.textContent,'Ä');
+ ids.get('mode-write').click();key.click();
+ assert.equal(ids.get('draft').value,'Ä');
+});
+test('1.9 every displayed English/Spanish/French prediction is actually insertable',()=>{
+ for(const [lang,source] of [['en','PLEASE '],['es','NECESITO '],['fr','BESOIN ']]){
+  const {ids}=boot();changeLanguage(ids,lang);ids.get('mode-write').click();
+  ids.get('draft').value=source;ids.get('draft').listeners.get('input')();
+  const labels=ids.get('suggestion-row').children.map(b=>b.textContent).filter(x=>x&&x!=='–');
+  assert.ok(labels.length>0,lang+' should have at least one suggestion');
+  for(const word of labels){
+   const x=boot();changeLanguage(x.ids,lang);x.ids.get('mode-write').click();
+   x.ids.get('draft').value=source;x.ids.get('draft').listeners.get('input')();
+   const choice=x.ids.get('suggestion-row').children.find(b=>b.textContent===word);
+   assert.ok(choice);
+   assert.doesNotThrow(()=>choice.click(),lang+' suggestion '+word+' should insert');
+   assert.equal(x.ids.get('draft').value,source+word+' ');
+   assert.equal(x.ids.get('last-message').textContent,'');
+  }
+ }
+});
