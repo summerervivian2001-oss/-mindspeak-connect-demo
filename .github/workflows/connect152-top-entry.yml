@@ -1,0 +1,25 @@
+name: MindSpeak 1.5.2 top joystick access
+
+on:
+  push:
+    branches:
+      - fix/connect152-joystick-entry-top
+  pull_request:
+    paths:
+      - mindspeak-connect-1.5.2.html
+      - tests/connect152-top-entry.test.cjs
+      - .github/workflows/connect152-top-entry.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect152-top-entry.test.cjs
