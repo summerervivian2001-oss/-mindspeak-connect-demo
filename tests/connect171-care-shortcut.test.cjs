@@ -863,7 +863,7 @@ test('1.7.1 top-level shortcut is visible independently of Quick/Write mode',()=
  const {ids}=boot();
  const top=ids.get('top-care-joystick');
  assert.ok(top,'New shortcut exists');
- assert.match(top.textContent,/Direkt zu den Pflege-Sätzen/);
+ assert.match(html, /id="top-care-joystick"[^>]*>🕹️ Direkt zu den Pflege-Sätzen/);
  assert.equal(ids.get('write-view').hidden,true);
  ids.get('mode-write').click();
  assert.equal(ids.get('write-view').hidden,false);
