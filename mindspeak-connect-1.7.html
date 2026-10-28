@@ -121,7 +121,7 @@ footer{font-size:.83rem;color:var(--muted);padding:18px 0 40px}
 <div id="suggestion-row" class="keyboard-row" role="group" aria-label="Sechs mögliche Wortergänzungen"></div>
 <button type="button" class="btn primary" id="word-scan-toggle" style="width:100%;margin-top:10px" aria-pressed="false">Wortvorschläge scannen</button>
 <p class="small" id="skip-explanation">Im normalen Reihenscan ist das erste Feld „ABC →“. Wähle dieses Feld mit dem Ein-Tasten-Scan, um ohne Vorschläge Buchstaben zu wählen. Im Buchstabenmodus heißt die letzte Taste „Wörter an“.</p>
-<p class="small" id="word-examples">Neu: <strong>ZUR, AUF, DEM, MIT</strong> sowie <strong>STUHLGANG, WASCHEN, INTIMPFLEGE, EINLAGE</strong> und weitere Pflegewörter. Du entscheidest weiterhin mit OK, was eingefügt oder ausgegeben wird.</p>
+<p class="small" id="word-examples">Neu: <strong>ZUR, AUF, DEM, MIT</strong> sowie <strong>STUHLGANG, WASCHEN, INTIMPFLEGE, EINLAGE, RASUR</strong> und weitere Pflegewörter. Du entscheidest weiterhin mit OK, was eingefügt oder ausgegeben wird.</p>
 <p class="small" id="word-scan-help">Tippe auf „Wortvorschläge scannen“. Der Scan bewegt sich dann <strong>nur durch die angezeigten Wörter</strong>. Wenn dein Wort gelb markiert ist, tippe auf „Dieses Feld auswählen“. Es wird nur eingefügt, nicht gesprochen.</p>
 </div>
 <div id="keyboard" class="keyboard" role="group" aria-label="Bildschirmtastatur mit sechs Reihen"></div>
@@ -282,7 +282,9 @@ const DICTIONARY=Object.freeze([
  'HAUT','WUND','WUNDE','JUCKREIZ','BRENNEN','SCHMERZHAFT',
  'HILF','HILFST','UNTERSTÜTZUNG','SCHAM','PRIVATSPHÄRE','ALLEIN',
  'FERTIG','FERTIGWERDEN','FÜHLEN','WOHL','UNWOHL','PEINLICH',
- 'MÖGLICH','DARF','SOLL','ANFASSEN','BERÜHREN','LANGSAM','VORSICHTIG'
+ 'MÖGLICH','DARF','SOLL','ANFASSEN','BERÜHREN','LANGSAM','VORSICHTIG',
+ 'RASUR','RASIEREN','RASIERE','RASIERT','RASIERST','BART','GESICHT','BEINE',
+ 'ACHSSELN','INTIMBEREICH','STOPP','AUFHÖREN','EINVERSTANDEN','FRAGEN'
 ]);
 const UNIQUE=Object.freeze([...new Set(DICTIONARY)]);
 const NEXT=Object.freeze({
@@ -306,6 +308,9 @@ const NEXT=Object.freeze({
  'INTIMPFLEGE':['BITTE','JETZT','SPÄTER'],
  'REINIGUNG':['BITTE','JETZT','SPÄTER'],
  'EINLAGE':['WECHSELN','BITTE','JETZT'],
+ 'RASUR':['BITTE','JETZT','SPÄTER'],
+ 'RASIERE':['MEIN','MICH','BITTE'],
+ 'RASIEREN':['BITTE','GESICHT','BART','BEINE'],
  'ZUR':['TOILETTE','TÜR','KÜCHE','ÄRZTIN'],
  'ZUM':['ARZT','BAD','BETT'],
  'AUF':['DIE','DEM','DEN','TOILETTE','SEITE'],
@@ -426,7 +431,10 @@ const CARE_PHRASES=[
  ['♡','Meine Haut tut weh.'],
  ['✥','Ich brauche frische Kleidung.'],
  ['▣','Bitte wechsel mein Inkontinenzmaterial.'],
- ['⚑','Bitte achte auf meine Privatsphäre.']
+ ['⚑','Bitte achte auf meine Privatsphäre.'],
+ ['✂','Bitte hilf mir bei der Rasur.'],
+ ['◉','Bitte rasiere mein Gesicht.'],
+ ['♡','Ich möchte vor der Rasur gefragt werden.']
 ];
 const PHRASES=[...GENERAL_PHRASES,...CARE_PHRASES];
 const {ROWS,HybridComposer,RowColumnScan}=window.MindSpeakHybridInput;
