@@ -1103,6 +1103,8 @@ function setLanguage(requested){
   $(id).textContent=ui[key];
  }
  languageStatus.textContent=ui.status;
+ // Keep even the now-hidden scan readout in the selected language.
+ scanCurrent.textContent=PHRASES[GENERAL_PHRASES.length][1];
  last='';lastMessage.textContent='';repeat.disabled=true;
  savedLetterTarget=null;scanIndex=0;navRow=0;navCol=0;editHistory.length=0;
  refreshSuggestions();render();paintNav();
