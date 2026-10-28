@@ -653,16 +653,16 @@ test('1.6 one Down returns to the exact last letter key and can continue typing'
  const {ids}=boot({disableSuggestionFocus:false});
  ids.get('quick-joystick').click();
  ids.get('joy-down').click(); // A-F
- ids.get('joy-right').click();ids.get('joy-right').click(); // C
- ids.get('joy-confirm').click(); // C
- assert.equal(ids.get('draft').value,'C');
+ ids.get('joy-right').click(); // B
+ ids.get('joy-confirm').click(); // B
+ assert.equal(ids.get('draft').value,'B');
  assert.equal(ids.get('suggestion-row').children.some(x=>x.dataset.navActive==='true'),true);
- ids.get('joy-down').click(); // no unwanted row reset, back to C
- assert.equal(ids.get('keyboard').children[0].children[2].dataset.navActive,'true');
- assert.match(ids.get('joystick-current').textContent,/C/);
- assert.equal(ids.get('draft').value,'C');
- ids.get('joy-confirm').click(); // C twice, regardless whether a suggestion exists
- assert.equal(ids.get('draft').value,'CC');
+ ids.get('joy-down').click(); // no unwanted row reset, back to B
+ assert.equal(ids.get('keyboard').children[0].children[1].dataset.navActive,'true');
+ assert.match(ids.get('joystick-current').textContent,/B/);
+ assert.equal(ids.get('draft').value,'B');
+ ids.get('joy-confirm').click(); // B twice; no automatic word completion
+ assert.equal(ids.get('draft').value,'BB');
  assert.equal(ids.get('last-message').textContent,'');
 });
 test('1.6 turning off word-focus preserves manual Up and old typing path',()=>{
