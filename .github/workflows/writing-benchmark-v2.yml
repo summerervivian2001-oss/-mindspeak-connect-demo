@@ -1,0 +1,27 @@
+name: MindSpeak writing benchmark V2 visible results
+
+on:
+  push:
+    branches:
+      - fix/writing-benchmark-visible-results
+  pull_request:
+    paths:
+      - mindspeak-writing-ab-152-v2.html
+      - mindspeak-writing-ab-161-v2.html
+      - tests/writing-ab-152-v2.test.cjs
+      - tests/writing-ab-161-v2.test.cjs
+      - .github/workflows/writing-benchmark-v2.yml
+
+permissions:
+  contents: read
+
+jobs:
+  results:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/writing-ab-152-v2.test.cjs tests/writing-ab-161-v2.test.cjs
