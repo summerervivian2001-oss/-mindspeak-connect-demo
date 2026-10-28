@@ -1188,8 +1188,8 @@ test('1.9 English keyboard swaps foreign letters for usable punctuation',()=>{
 });
 test('1.9 Spanish one-switch letter scan includes Ñ in the fifth keyboard row',()=>{
  const {ids,step}=boot();changeLanguage(ids,'es');ids.get('mode-write').click();
- ids.get('letter-scan-toggle').click();
- ids.get('scan-toggle').click();
+ ids.get('letter-scan-toggle').click(); // This control starts the scan itself.
+ assert.equal(ids.get('scan-hud').hidden,false);
  for(let i=0;i<4;i++)step();
  assert.match(ids.get('scan-current').textContent,/Ñ/);
  assert.equal(ids.get('last-message').textContent,'');
