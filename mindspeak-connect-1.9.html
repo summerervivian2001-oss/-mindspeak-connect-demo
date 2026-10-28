@@ -478,7 +478,9 @@ function localizedSuggestions(text,limit=6){
  const preferred=pack.next[previous]||pack.initial;
  const out=[];
  for(const word of [...preferred,...pack.words]){
-  if(!word.startsWith(prefix)||word===prefix||out.includes(word))continue;
+  // A prediction must be in the active dictionary; otherwise confirming it
+  // would fail completion (some context examples may be absent in a pack).
+  if(!pack.words.includes(word)||!word.startsWith(prefix)||word===prefix||out.includes(word))continue;
   out.push(word);if(out.length>=limit)break;
  }
  return out;
