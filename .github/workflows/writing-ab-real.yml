@@ -1,0 +1,27 @@
+name: MindSpeak real writing A-B test
+
+on:
+  push:
+    branches:
+      - feature/mindspeak-real-writing-ab
+  pull_request:
+    paths:
+      - mindspeak-writing-ab-152.html
+      - mindspeak-writing-ab-161.html
+      - tests/writing-ab-152-regression.test.cjs
+      - tests/writing-ab-161-regression.test.cjs
+      - .github/workflows/writing-ab-real.yml
+
+permissions:
+  contents: read
+
+jobs:
+  real-writing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/writing-ab-152-regression.test.cjs tests/writing-ab-161-regression.test.cjs
