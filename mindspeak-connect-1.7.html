@@ -284,7 +284,7 @@ const DICTIONARY=Object.freeze([
  'FERTIG','FERTIGWERDEN','FÜHLEN','WOHL','UNWOHL','PEINLICH',
  'MÖGLICH','DARF','SOLL','ANFASSEN','BERÜHREN','LANGSAM','VORSICHTIG',
  'RASUR','RASIEREN','RASIERE','RASIERT','RASIERST','BART','GESICHT','BEINE',
- 'ACHSSELN','INTIMBEREICH','STOPP','AUFHÖREN','EINVERSTANDEN','FRAGEN'
+ 'ACHSELN','INTIMBEREICH','STOPP','AUFHÖREN','EINVERSTANDEN','FRAGEN'
 ]);
 const UNIQUE=Object.freeze([...new Set(DICTIONARY)]);
 const NEXT=Object.freeze({
@@ -420,6 +420,7 @@ const GENERAL_PHRASES=[
  ['♡','Ich habe Schmerzen'],['▤','Ich brauche Wasser']
 ];
 const CARE_PHRASES=[
+ ['✋','Stopp, bitte hör auf.'],
  ['▣','Ich hatte Stuhlgang.'],
  ['◧','Bitte wechsle meine Einlage.'],
  ['◉','Ich brauche Hilfe bei der Intimpflege.'],
@@ -434,7 +435,8 @@ const CARE_PHRASES=[
  ['⚑','Bitte achte auf meine Privatsphäre.'],
  ['✂','Bitte hilf mir bei der Rasur.'],
  ['◉','Bitte rasiere mein Gesicht.'],
- ['♡','Ich möchte vor der Rasur gefragt werden.']
+ ['♡','Ich möchte vor der Rasur gefragt werden.'],
+ ['◉','Bitte frag mich, bevor du mich berührst.']
 ];
 const PHRASES=[...GENERAL_PHRASES,...CARE_PHRASES];
 const {ROWS,HybridComposer,RowColumnScan}=window.MindSpeakHybridInput;
