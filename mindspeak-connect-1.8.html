@@ -488,6 +488,7 @@ class OneSwitchKeyGate{
 window.MindSpeakOneSwitchKeyGate=OneSwitchKeyGate;
 const externalSwitchKey=$('external-switch-key'),externalSwitchToggle=$('external-switch-enable'),externalSwitchStatus=$('external-switch-status');
 const keyGate=new OneSwitchKeyGate(650);let externalSwitchEnabled=false;let switchAcceptCount=0;
+if(!externalSwitchKey.value)externalSwitchKey.value='Space';
 function disableExternalSwitch(message){
  externalSwitchEnabled=false;keyGate.reset();externalSwitchToggle.setAttribute('aria-pressed','false');
  externalSwitchToggle.textContent='Tastereingabe aktivieren';
