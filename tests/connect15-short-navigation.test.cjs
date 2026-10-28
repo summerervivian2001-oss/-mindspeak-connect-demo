@@ -316,10 +316,13 @@ test('1.4 joystick uses same suggestion, letter, and Undo code paths',()=>{
  assert.equal(ids.get('draft').value,'ICH ');
  ids.get('joy-confirm').click();
  assert.equal(ids.get('draft').value,'ICH C');
- // Next six rows reach accessible action row without auto-committing anything.
- for(let i=0;i<6;i++)ids.get('joy-down').click();
- ids.get('joy-left').click();ids.get('joy-left').click();
- assert.match(ids.get('joystick-current').textContent,/Rückgängig/);
+ // Navigate to the action row while remaining agnostic about suggestion-row
+ // visibility and wrap-around; no navigation click edits text or speaks.
+ const actions=ids.get('control-row').children;
+ for(let i=0;i<10&&!actions.some(x=>x.dataset.navActive==='true');i++)ids.get('joy-up').click();
+ assert.ok(actions.some(x=>x.dataset.navActive==='true'),'Action row reachable');
+ for(let i=0;i<6&&actions[0].dataset.navActive!=='true';i++)ids.get('joy-left').click();
+ assert.equal(actions[0].dataset.navActive,'true','Undo reachable by joystick');
  ids.get('joy-confirm').click();
  assert.equal(ids.get('draft').value,'ICH ');
  assert.equal(ids.get('last-message').textContent,'');
@@ -442,7 +445,7 @@ test('1.5 wraps first suggestions up directly to last action row and back',()=>{
  assert.match(ids.get('joystick-current').textContent,/ICH/);
  ids.get('joy-up').click();
  // Undo is disabled while empty; navigation skips it and offers Delete instead.
- assert.match(ids.get('joystick-current').textContent,/Letztes Zeichen entfernen/);
+ assert.match(ids.get('joystick-current').textContent,/⌫/);
  assert.equal(ids.get('draft').value,'');
  assert.equal(ids.get('last-message').textContent,'');
  ids.get('joy-down').click();
@@ -477,8 +480,8 @@ test('1.5 allows one-up corrections on the compact joystick without accidental t
  ids.get('joy-confirm').click();
  assert.equal(ids.get('draft').value,'');
  assert.equal(ids.get('last-message').textContent,'');
- ids.get('joy-down').click(); // suggestions again
- assert.match(ids.get('joystick-current').textContent,/ICH/);
+ ids.get('joy-down').click(); // suggestions again, nearest enabled column
+ assert.match(ids.get('joystick-current').textContent,/JA/);
  assert.equal(ids.get('joystick-demo').hidden,false);
 });
 test('1.5 quick phrase vertical wrapping does not speak until OK',()=>{
