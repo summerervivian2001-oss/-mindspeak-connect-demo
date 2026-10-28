@@ -239,7 +239,7 @@ footer{font-size:.83rem;color:var(--muted);padding:18px 0 40px}
       if (key === '⌫') { this.text=Array.from(this.text).slice(0,-1).join('');return 'changed'; }
       if (key === 'Zurück') return 'back';
       if (key === 'Satz sprechen') return this.text.trim() ? 'speak' : 'empty';
-      if (!ROWS.some(r=>r.includes(key))) throw new RangeError('Unknown key');
+      if (!ROWS.some(r=>r.includes(key)) && !/^[\p{L}!,\x27-]$/u.test(key)) throw new RangeError('Unknown key');
       if (Array.from(this.text).length >= this.maxLength) return 'full';
       this.text+=key;
       return 'changed';
@@ -503,6 +503,15 @@ const LANG_UI={
  fr:{modeTitle:'Comment souhaitez-vous communiquer ?',quick:'⚡ Phrases rapides',write:'✍ Écrire un message',quickTitle:'Phrases rapides',careTitle:'Soins et hygiène personnelle',writeTitle:'Écrire votre message',careBtn:'🕹️ Accéder aux phrases de soins',careScan:'♿ Lancer le balayage des soins (un contacteur)',writeJoy:'🕹️ Écrire au joystick',status:'Français actif. Phrases et suggestions en français.',locked:'Terminez ou effacez le message avant de changer de langue.'}
 };
 const suggestWords=localizedSuggestions,completeWord=localizedCompletion;
+const SPECIAL_KEY_ROW={
+ de:['Y','Z','Ä','Ö','Ü','ß'],
+ en:['Y','Z',',','!',"'",'-'],
+ es:['Y','Z','Ñ','Á','É','Í'],
+ fr:['Y','Z','É','È','À','Ç']
+};
+function localizedKeyboardRows(){
+ return ROWS.map((r,i)=>i===4?SPECIAL_KEY_ROW[activeLanguage]:r);
+}
 const {ROWS,HybridComposer,RowColumnScan}=window.MindSpeakHybridInput;
 const composer=new HybridComposer(300);
 let keyboardScan=new RowColumnScan();
@@ -582,7 +591,7 @@ ROWS.forEach((keys,rowIndex)=>{
     button.dataset.active='false';
     button.textContent=key===' '?'␣':key;
     button.setAttribute('aria-label',key===' '?'Leerzeichen':key==='⌫'?'Letztes Zeichen entfernen':key);
-    button.addEventListener('click',()=>{if(letterOnlyMode&&key==='Zurück'){setLetterMode(false,'Wortvorschläge wieder sichtbar.');return;}if(timer!==null)stopScan();handleKey(key);});
+    button.addEventListener('click',()=>{const actual=button.dataset.languageKey||key;if(letterOnlyMode&&key==='Zurück'){setLetterMode(false,'Wortvorschläge wieder sichtbar.');return;}if(timer!==null)stopScan();handleKey(actual);});
     group.appendChild(button);buttons.push(button);
   });
   keyboard.appendChild(group);keyboardButtons.push({group,buttons});
@@ -793,9 +802,10 @@ function refreshSuggestions(){
   // Predictions remain tappable; in the one-button letter scan they are deliberately skipped.
   suggestionWrap.hidden=!suggestionRowPresent;
   wordScanToggle.disabled=!suggestionRowPresent;
+  const localRows=localizedKeyboardRows();
   const scanRows=letterOnlyMode||!suggestionRowPresent
-   ? [...ROWS.map((r,i)=>i===5&&letterOnlyMode?[...r.slice(0,5),'Wörter an']:r),actionMatrix()]
-   : [['ABC →',...activeSuggestions.slice(0,5),...Array(Math.max(0,5-activeSuggestions.length)).fill('–')],...ROWS,actionMatrix()];
+   ? [...localRows.map((r,i)=>i===5&&letterOnlyMode?[...r.slice(0,5),'Wörter an']:r),actionMatrix()]
+   : [['ABC →',...activeSuggestions.slice(0,5),...Array(Math.max(0,5-activeSuggestions.length)).fill('–')],...localRows,actionMatrix()];
   keyboardScan=new RowColumnScan(scanRows);
   paintMode();
   paintSuggestionButtons();
@@ -851,7 +861,7 @@ function handleKey(key){
     // Only explicit Joystick OK on a letter can trigger this focus change.
     // No suggestion is ever inserted by a prediction or by focus movement.
     if(joystickConfirming&&autoSuggestEnabled&&mode==='write'&&
-       /^[A-Za-zÄÖÜäöüß]$/u.test(key)&&composer.text!==previous&&
+       /^[\p{L}]$/u.test(key)&&composer.text!==previous&&
        !letterOnlyMode&&suggestionRowPresent){
       const firstUsable=activeSuggestions.findIndex(w=>completeWord(composer.text,w,composer.maxLength).ok);
       if(firstUsable>=0&&navValid(suggestionButtons[firstUsable])){
@@ -1099,6 +1109,12 @@ function setLanguage(requested){
   entry[1]=all[i];
   const button=phraseButtons[i];button.children[1].textContent=all[i];
   button.setAttribute('aria-label',all[i]+' auswählen');
+ });
+ const row=keyboardButtons[4].buttons;
+ SPECIAL_KEY_ROW[requested].forEach((char,i)=>{
+  row[i].dataset.languageKey=char;
+  row[i].textContent=char;
+  row[i].setAttribute('aria-label',char);
  });
  const ui=LANG_UI[requested];
  for(const [id,key] of [['mode-title','modeTitle'],['mode-quick','quick'],['mode-write','write'],['quick-title','quickTitle'],['care-title','careTitle'],['write-title','writeTitle'],['top-care-joystick','careBtn'],['top-care-switch','careScan'],['quick-joystick','writeJoy']]){
