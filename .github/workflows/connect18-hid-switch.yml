@@ -1,0 +1,25 @@
+name: MindSpeak 1.8 externer Ein-Taster
+
+on:
+  push:
+    branches:
+      - feature/connect18-hid-one-switch
+  pull_request:
+    paths:
+      - mindspeak-connect-1.8.html
+      - tests/connect18-hid-switch.test.cjs
+      - .github/workflows/connect18-hid-switch.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect18-hid-switch.test.cjs
