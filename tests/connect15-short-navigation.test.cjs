@@ -446,7 +446,8 @@ test('1.5 wraps first suggestions up directly to last action row and back',()=>{
  assert.equal(ids.get('draft').value,'');
  assert.equal(ids.get('last-message').textContent,'');
  ids.get('joy-down').click();
- assert.match(ids.get('joystick-current').textContent,/ICH/);
+ // Column follows the nearest enabled action (index 1), so returning lands on JA.
+ assert.match(ids.get('joystick-current').textContent,/JA/);
 });
 test('1.5 wraps each horizontal row end while skipping disabled suggestions',()=>{
  const {ids}=boot();
