@@ -441,7 +441,8 @@ test('1.5 wraps first suggestions up directly to last action row and back',()=>{
  ids.get('input-method').value='joystick';ids.get('input-method').listeners.get('change')();
  assert.match(ids.get('joystick-current').textContent,/ICH/);
  ids.get('joy-up').click();
- assert.match(ids.get('joystick-current').textContent,/Rückgängig/);
+ // Undo is disabled while empty; navigation skips it and offers Delete instead.
+ assert.match(ids.get('joystick-current').textContent,/Letztes Zeichen entfernen/);
  assert.equal(ids.get('draft').value,'');
  assert.equal(ids.get('last-message').textContent,'');
  ids.get('joy-down').click();
