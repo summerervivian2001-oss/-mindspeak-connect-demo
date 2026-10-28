@@ -1,0 +1,25 @@
+name: MindSpeak 1.6.1 return to last letter
+
+on:
+  push:
+    branches:
+      - fix/connect161-predictive-return-anchor
+  pull_request:
+    paths:
+      - mindspeak-connect-1.6.1.html
+      - tests/connect161-return-anchor.test.cjs
+      - .github/workflows/connect161-return-anchor.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect161-return-anchor.test.cjs
