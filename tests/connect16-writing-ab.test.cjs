@@ -49,7 +49,10 @@ function boot(options={}) {
     },
     createElement() { return new StubElement(); },
     listeners:new Map(),
-    addEventListener(name,callback) { this.listeners.set(name,callback); },
+    addEventListener(name,callback) {
+      const prior=this.listeners.get(name);
+      this.listeners.set(name,prior?(...args)=>{prior(...args);callback(...args);} :callback);
+    },
     body: new StubElement(),
     hidden: false
   };
@@ -826,7 +829,7 @@ test('benchmark start resets editor and selects joystick with correct condition,
  assert.equal(ids.get('auto-suggest-focus').disabled,true);
  assert.equal(ids.get('last-message').textContent,'');
  assert.equal(bench.getIndex(),0);
- assert.deepEqual(bench.getCounters(),{arrows:0,ok:0,words:0,undo:0,backspaces:0});
+ assert.deepEqual(JSON.parse(JSON.stringify(bench.getCounters())),{arrows:0,ok:0,words:0,undo:0,backspaces:0});
 });
 test('benchmark counts real joystick directions and conscious OK word insertions',()=>{
  const {ids,bench}=boot();
