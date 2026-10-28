@@ -1,0 +1,25 @@
+name: MindSpeak 1.7.1 Pflege-Schnellzugriff
+
+on:
+  push:
+    branches:
+      - fix/connect171-care-quick-access
+  pull_request:
+    paths:
+      - mindspeak-connect-1.7.1.html
+      - tests/connect171-care-shortcut.test.cjs
+      - .github/workflows/connect171-care-shortcut.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/connect171-care-shortcut.test.cjs
