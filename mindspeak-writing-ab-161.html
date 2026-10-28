@@ -403,7 +403,7 @@ function benchKey(action){
 }
 function benchCheck(){
  if(!benchActive)return;
- const clean=s=>s.toLocaleUpperCase('de-DE').trim().replace(/\\s+/g,' ');
+ const clean=s=>s.toLocaleUpperCase('de-DE').trim().replace(/\s+/g,' ');
  if(clean(composer.text)!==benchTarget)return;
  const elapsed=Math.max(0,(performance.now()-benchStartedAt)/1000);
  benchActive=false;
@@ -921,7 +921,7 @@ $('hud-choose').addEventListener('click',()=>selectCurrent('Scan-Taste'));
 $('hud-stop').addEventListener('click',()=>stopScan('Scan manuell gestoppt.'));
 scanSpeed.addEventListener('change',()=>{if(timer!==null){clearInterval(timer);startTimer();}});
 scanRounds.addEventListener('change',()=>{cycles=0;});
-draft.addEventListener('input',()=>{if(timer!==null)stopScan('Text direkt bearbeitet.');editHistory.length=0;composer.setText(draft.value);displayDraft();draftStatus.textContent='Text bearbeitet. Noch keine Sprachausgabe.';});
+draft.addEventListener('input',()=>{if(benchActive){benchActive=false;$('benchmark-state').textContent='Messung abgebrochen: Text direkt getippt. Bitte nur das Joystick-Steuerkreuz nutzen.';}if(timer!==null)stopScan('Text direkt bearbeitet.');editHistory.length=0;composer.setText(draft.value);displayDraft();draftStatus.textContent='Text bearbeitet. Noch keine Sprachausgabe.';});
 speakDraft.addEventListener('click',()=>{if(timer!==null)stopScan();handleKey('Satz sprechen');});
 clearDraft.addEventListener('click',()=>{
  if(timer!==null)stopScan();
