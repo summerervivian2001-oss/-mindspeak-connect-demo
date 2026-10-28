@@ -728,8 +728,8 @@ test('1.6.1 browsing from BITTE across suggestion columns still returns to B, ne
  ids.get('quick-joystick').click();
  ids.get('joy-down').click();ids.get('joy-right').click();ids.get('joy-confirm').click();
  assert.equal(ids.get('draft').value,'B');
- for(let i=0;i<3;i++)ids.get('joy-right').click(); // suggestion column 4
- assert.match(ids.get('joystick-current').textContent,/Reihe 1 · Feld 4/);
+ for(let i=0;i<2;i++)ids.get('joy-right').click(); // B offers 3 suggestions
+ assert.match(ids.get('joystick-current').textContent,/Reihe 1 · Feld 3/);
  assert.equal(ids.get('joy-down').textContent,'↓ B');
  ids.get('joy-down').click();
  assert.equal(ids.get('keyboard').children[0].children[1].dataset.navActive,'true');
@@ -783,7 +783,7 @@ test('1.6.1 correct return anchor remains an optional feature and never auto-com
  assert.equal(ids.get('draft').value,'B');
  assert.equal(ids.get('joy-down').dataset.letterReturn,'false');
  ids.get('joy-up').click();
- assert.match(ids.get('joystick-current').textContent,/BITTE/);
+ assert.match(ids.get('joystick-current').textContent,/BRAUCHE/);
  assert.equal(ids.get('draft').value,'B');
  assert.equal(ids.get('last-message').textContent,'');
 });
