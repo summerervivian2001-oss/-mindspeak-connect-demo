@@ -860,7 +860,9 @@ function displayDraft(){
  de:' / 300 Zeichen · Nur für diese Sitzung',
  en:' / 300 characters · This session only',
  es:' / 300 caracteres · Solo esta sesión',
- fr:' / 300 caractères · Cette session seulement'
+ fr:' / 300 caractères · Cette session seulement',
+ tr:' / 300 karakter · Yalnızca bu oturum',
+ ar:' / ٣٠٠ حرف · لهذه الجلسة فقط'
 })[activeLanguage];
   undoDraft.disabled=editHistory.length===0;
   speakDraft.disabled=!composer.text.trim();clearArmed=false;clearDraft.textContent=localizedMessage('Satz löschen');
@@ -1116,32 +1118,36 @@ function localizedMessage(message){
  const trans=I18N_DYNAMIC[activeLanguage]||{};
  if(Object.prototype.hasOwnProperty.call(trans,message))return trans[message];
  let m;
- if((m=message.match(/^Wort (.+) eingefügt – noch nichts gesprochen\.$/)))return ({en:'Word ',es:'Palabra ',fr:'Mot '})[activeLanguage]+m[1]+({en:' inserted, not spoken.',es:' insertada, sin voz.',fr:' inséré, sans parole.'})[activeLanguage];
- if((m=message.match(/^Reihe (\d+) gewählt\. Jetzt Taste auswählen\.$/)))return ({en:'Row ',es:'Fila ',fr:'Rangée '})[activeLanguage]+m[1]+({en:' selected. Choose a key.',es:' elegida. Selecciona una tecla.',fr:' choisie. Choisissez une touche.'})[activeLanguage];
- if((m=message.match(/^Reihe (\d+): (.*)$/)))return ({en:'Row ',es:'Fila ',fr:'Rangée '})[activeLanguage]+m[1]+': '+m[2].replaceAll('Wörter an',localizedMessage('Wörter an')).replaceAll('Scan stoppen',localizedMessage('Scan stoppen')).replaceAll('Zurück',localizedMessage('Zurück'));
+ if((m=message.match(/^Wort (.+) eingefügt – noch nichts gesprochen\.$/)))return ({en:'Word ',es:'Palabra ',fr:'Mot ',tr:'Kelime ',ar:'الكلمة '})[activeLanguage]+m[1]+({en:' inserted, not spoken.',es:' insertada, sin voz.',fr:' inséré, sans parole.',tr:' eklendi; seslendirilmedi.',ar:' أُدرجت دون نطق.'})[activeLanguage];
+ if((m=message.match(/^Reihe (\d+) gewählt\. Jetzt Taste auswählen\.$/)))return ({en:'Row ',es:'Fila ',fr:'Rangée ',tr:'Satır ',ar:'الصف '})[activeLanguage]+m[1]+({en:' selected. Choose a key.',es:' elegida. Selecciona una tecla.',fr:' choisie. Choisissez une touche.',tr:' seçildi. Tuşu seçin.',ar:' محدد. اختر المفتاح.'})[activeLanguage];
+ if((m=message.match(/^Reihe (\d+): (.*)$/)))return ({en:'Row ',es:'Fila ',fr:'Rangée ',tr:'Satır ',ar:'الصف '})[activeLanguage]+m[1]+': '+m[2].replaceAll('Wörter an',localizedMessage('Wörter an')).replaceAll('Scan stoppen',localizedMessage('Scan stoppen')).replaceAll('Zurück',localizedMessage('Zurück'));
  if(message.startsWith('Markiert: ')){
    return message.replace('Markiert: ',localizedMessage('Markiert: ')).replace(' · Reihe ',localizedMessage(' · Reihe ')).replace(' · Feld ',localizedMessage(' · Feld ')).replace(' · ↓ zurück zu ',localizedMessage(' · ↓ zurück zu '));
  }
- if(message.startsWith('Simulierter Impuls abgelehnt: '))return ({en:'Simulated impulse rejected: ',es:'Impulso simulado rechazado: ',fr:'Impulsion simulée rejetée : '})[activeLanguage]+message.slice(30);
+ if(message.startsWith('Simulierter Impuls abgelehnt: '))return ({en:'Simulated impulse rejected: ',es:'Impulso simulado rechazado: ',fr:'Impulsion simulée rejetée : ',tr:'Simüle sinyal reddedildi: ',ar:'تم رفض الإشارة التجريبية: '})[activeLanguage]+message.slice(30);
  if(message.startsWith('↶ Rückgängig'))return '↶ '+localizedMessage('Rückgängig');
  if(message.startsWith('Tastereingabe aktiv. ')){
-  const label=message.includes('Leertaste')?({en:'Space',es:'Espacio',fr:'Espace'})[activeLanguage]:'Enter';
+  const label=message.includes('Leertaste')?({en:'Space',es:'Espacio',fr:'Espace',tr:'Boşluk',ar:'مسافة'})[activeLanguage]:'Enter';
   return ({
    en:'Switch input active. '+label+' is assigned. First press starts scanning; later presses select the highlighted item.',
    es:'Pulsador activo. Tecla '+label+' asignada. La primera pulsación inicia el barrido y las siguientes confirman la opción resaltada.',
-   fr:'Contacteur actif. Touche '+label+' assignée. La première pression lance le balayage et les suivantes choisissent la sélection.'
+   fr:'Contacteur actif. Touche '+label+' assignée. La première pression lance le balayage et les suivantes choisissent la sélection.',
+   tr:'Düğme etkin. '+label+' tuşu atandı. İlk basış taramayı başlatır, sonraki basışlar onaylar.',
+   ar:'المفتاح مفعّل. المفتاح '+label+' محدد. الضغطة الأولى تبدأ المسح، والضغطات التالية تؤكد الاختيار.'
   })[activeLanguage];
  }
  if(message.startsWith('Taster neu eingestellt: ')){
-  const label=message.includes('Leertaste')?({en:'Space',es:'Espacio',fr:'Espace'})[activeLanguage]:'Enter';
+  const label=message.includes('Leertaste')?({en:'Space',es:'Espacio',fr:'Espace',tr:'Boşluk',ar:'مسافة'})[activeLanguage]:'Enter';
   return ({
    en:'Switch key changed to '+label+'. Next press starts or confirms scanning.',
    es:'Tecla del pulsador cambiada a '+label+'. La siguiente pulsación inicia o confirma.',
-   fr:'Touche du contacteur passée à '+label+'. La prochaine pression lance ou confirme.'
+   fr:'Touche du contacteur passée à '+label+'. La prochaine pression lance ou confirme.',
+   tr:'Düğme tuşu '+label+' olarak değişti. Sonraki basış taramayı başlatır veya onaylar.',
+   ar:'تم تغيير مفتاح التحكم إلى '+label+'. الضغطة التالية تبدأ المسح أو تؤكد الاختيار.'
   })[activeLanguage];
  }
- if(message.startsWith('Tastereingabe ignoriert: '))return ({en:'Switch press ignored: ',es:'Pulsación ignorada: ',fr:'Pression ignorée : '})[activeLanguage]+message.slice('Tastereingabe ignoriert: '.length);
- if(message.startsWith('Tasterimpuls '))return ({en:'Switch impulse ',es:'Impulso del pulsador ',fr:'Impulsion du contacteur '})[activeLanguage]+message.slice('Tasterimpuls '.length).replace(' erkannt: ',' detected: ').replace('Scan läuft; nur gezielte Auswahl wird ausgeführt.','Scan running; only deliberate selections are activated.').replace('Scan beendet; nächster Impuls startet erneut.','Scan finished; the next press starts again.').replace('Taste loslassen vor erneutem Drücken.','Release before pressing again.');
+ if(message.startsWith('Tastereingabe ignoriert: '))return ({en:'Switch press ignored: ',es:'Pulsación ignorada: ',fr:'Pression ignorée : ',tr:'Düğme basışı yok sayıldı: ',ar:'تم تجاهل ضغطة المفتاح: '})[activeLanguage]+message.slice('Tastereingabe ignoriert: '.length);
+ if(message.startsWith('Tasterimpuls '))return ({en:'Switch impulse ',es:'Impulso del pulsador ',fr:'Impulsion du contacteur ',tr:'Düğme sinyali ',ar:'إشارة المفتاح '})[activeLanguage]+message.slice('Tasterimpuls '.length).replace(' erkannt: ',' detected: ').replace('Scan läuft; nur gezielte Auswahl wird ausgeführt.','Scan running; only deliberate selections are activated.').replace('Scan beendet; nächster Impuls startet erneut.','Scan finished; the next press starts again.').replace('Taste loslassen vor erneutem Drücken.','Release before pressing again.');
  return message;
 }
 
@@ -1158,6 +1164,9 @@ const I18N_ARIA={
  en:{phrases:'Choose an everyday phrase',care:'Choose a care phrase',suggestions:'Six possible word suggestions',keyboard:'On-screen keyboard with six rows',controls:'Scanning action row',joy:'Joystick simulation',scan:'Active scan controls',mode:'Communication mode',switch:'External single switch via Bluetooth or USB keyboard',select:' select',selected:'Word '},
  es:{phrases:'Seleccionar frase cotidiana',care:'Seleccionar frase de cuidados',suggestions:'Seis sugerencias de palabras',keyboard:'Teclado en pantalla con seis filas',controls:'Fila de acciones del barrido',joy:'Simulación de joystick',scan:'Controles del barrido',mode:'Modo de comunicación',switch:'Pulsador externo por teclado Bluetooth o USB',select:' seleccionar',selected:'Palabra '},
  fr:{phrases:'Choisir une phrase quotidienne',care:'Choisir une phrase de soins',suggestions:'Six suggestions de mots',keyboard:'Clavier à l’écran avec six rangées',controls:'Rangée de commandes du balayage',joy:'Simulation de joystick',scan:'Commandes du balayage',mode:'Mode de communication',switch:'Contacteur externe par clavier Bluetooth ou USB',select:' sélectionner',selected:'Mot '}
+,
+ tr:{phrases:'Günlük ifadeleri seç',care:'Bakım ifadesi seç',suggestions:'Altı olası kelime önerisi',keyboard:'Altı satırlı ekran klavyesi',controls:'Tarama işlem satırı',joy:'Joystick simülasyonu',scan:'Etkin tarama denetimleri',mode:'İletişim modu',switch:'Bluetooth veya USB klavye ile harici düğme',select:' seç',selected:'Kelime '},
+ ar:{phrases:'اختيار عبارة يومية',care:'اختيار عبارة رعاية',suggestions:'ستة اقتراحات كلمات',keyboard:'لوحة مفاتيح على الشاشة بستة صفوف',controls:'صف إجراءات المسح',joy:'محاكاة عصا التحكم',scan:'أدوات التحكم بالمسح',mode:'وضع التواصل',switch:'مفتاح خارجي عبر لوحة مفاتيح بلوتوث أو USB',select:' اختيار',selected:'كلمة '}
 };
 function updateLanguageControls(){
  const L=I18N_ARIA[activeLanguage];
@@ -1169,7 +1178,7 @@ function updateLanguageControls(){
  $('joystick-demo').setAttribute('aria-label',L.joy);
  phraseButtons.forEach((btn,i)=>btn.setAttribute('aria-label',PHRASES[i][1]+L.select));
  keyboardButtons.forEach(({group,buttons},i)=>{
-  group.setAttribute('aria-label',(activeLanguage==='en'?'Row ':activeLanguage==='es'?'Fila ':activeLanguage==='fr'?'Rangée ':'Reihe ')+(i+1));
+  group.setAttribute('aria-label',({de:'Reihe ',en:'Row ',es:'Fila ',fr:'Rangée ',tr:'Satır ',ar:'الصف '})[activeLanguage]+(i+1));
   buttons.forEach((btn,j)=>{
    const key=btn.dataset.languageKey||ROWS[i][j];
    if(i===5&&j===4)btn.textContent=localizedMessage('Satz vorlesen');
@@ -1183,14 +1192,18 @@ function updateLanguageControls(){
   de:'Hier erscheint dein eigener Satz …',
   en:'Your message appears here …',
   es:'Tu mensaje aparece aquí …',
-  fr:'Votre message apparaît ici …'
+  fr:'Votre message apparaît ici …',
+  tr:'Mesajınız burada görünür …',
+  ar:'ستظهر رسالتك هنا …'
  })[activeLanguage]);
  const methods=$('input-method');
  methods.setAttribute('aria-label',({
   de:'Bedienungsart auswählen',
   en:'Choose an input method',
   es:'Seleccionar método de control',
-  fr:'Choisir le mode de commande'
+  fr:'Choisir le mode de commande',
+  tr:'Giriş yöntemini seçin',
+  ar:'اختر طريقة الإدخال'
  })[activeLanguage]);
  const voiceOffLabel=localizedMessage('Sprachausgabe: Aus');
  const voiceOnLabel=localizedMessage('Sprachausgabe: An');
@@ -1208,7 +1221,9 @@ function updateLanguageControls(){
    de:'Tastereingabe aktiv. Taste loslassen vor erneutem Drücken.',
    en:'Switch input active. Release the key before pressing again.',
    es:'Pulsador activo. Suelta la tecla antes de volver a pulsar.',
-   fr:'Contacteur actif. Relâchez la touche avant d’appuyer à nouveau.'
+   fr:'Contacteur actif. Relâchez la touche avant d’appuyer à nouveau.',
+   tr:'Düğme girişi etkin. Tekrar basmadan önce tuşu bırakın.',
+   ar:'المفتاح الخارجي مفعّل. حرر المفتاح قبل الضغط مرة أخرى.'
   })[activeLanguage];
  }
 }
