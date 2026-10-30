@@ -1342,3 +1342,23 @@ test('2.0 word suggestions and all 23 phrases still work after multiple locale c
  ids.get('care-phrases').children[0].click();
  assert.equal(ids.get('last-message').textContent,'Stopp, bitte hör auf.');
 });
+
+test('2.0 free-writing character counter follows selected language after editing',()=>{
+ const {ids}=boot();changeLanguage(ids,'es');ids.get('mode-write').click();
+ ids.get('draft').value='HOLA';ids.get('draft').listeners.get('input')();
+ assert.match(ids.get('draft-count').textContent,/4 \/ 300 caracteres/);
+ assert.doesNotMatch(ids.get('draft-count').textContent,/Zeichen/);
+});
+test('2.0 word suggestion accessible label stays localized after typing',()=>{
+ const {ids}=boot();changeLanguage(ids,'fr');ids.get('mode-write').click();
+ ids.get('draft').value='MÉDI';ids.get('draft').listeners.get('input')();
+ const btn=ids.get('suggestion-row').children.find(b=>b.textContent==='MÉDICAMENT');
+ assert.ok(btn);
+ assert.match(btn.getAttribute('aria-label'),/Mot MÉDICAMENT/);
+ assert.doesNotMatch(btn.getAttribute('aria-label'),/einfügen/);
+});
+test('2.0 final keyboard action keys do not show German when French selected',()=>{
+ const {ids}=boot();changeLanguage(ids,'fr');ids.get('mode-write').click();
+ assert.equal(ids.get('keyboard').children[5].children[4].textContent,'Lire le message');
+ assert.equal(ids.get('keyboard').children[5].children[5].textContent,'Retour');
+});
