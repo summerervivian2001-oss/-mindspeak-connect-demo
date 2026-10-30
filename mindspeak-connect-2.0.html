@@ -787,14 +787,14 @@ function paintSuggestionButtons(){
     const isShortcut=key==='ABC →';
     btn.disabled=key==='–';
     btn.textContent=key;
-    btn.setAttribute('aria-label',isShortcut?'Nur Buchstaben scannen':key==='–'?'Kein Vorschlag':'Wort '+key+' einfügen');
+    btn.setAttribute('aria-label',isShortcut?localizedMessage('Nur Buchstabenreihen aktiv.'):key==='–'?localizedMessage('Kein Vorschlag'):I18N_ARIA[activeLanguage].selected+key);
   });
 }
 function paintMode(){
   letterScanToggle.setAttribute('aria-pressed',String(letterOnlyMode));
   letterScanToggle.textContent=localizedMessage(letterOnlyMode?'Wortvorschläge wieder einschalten':'Direkt Buchstaben scannen');
   keyboardButtons[5].buttons[5].textContent=localizedMessage(letterOnlyMode?'Wörter an':'Zurück');
-  keyboardButtons[5].buttons[5].setAttribute('aria-label',letterOnlyMode?'Wortvorschläge wieder einschalten':'Zurück zur Reihenauswahl');
+  keyboardButtons[5].buttons[5].setAttribute('aria-label',localizedMessage(letterOnlyMode?'Wortvorschläge wieder einschalten':'Zurück zur Reihenauswahl.'));
 }
 function refreshSuggestions(){
   activeSuggestions=suggestWords(composer.text);
@@ -841,7 +841,12 @@ function insertSuggestedWord(word){
   return true;
 }
 function displayDraft(){
-  draft.value=composer.text;draftCount.textContent=Array.from(composer.text).length+' / 300 Zeichen · Nur für diese Sitzung';
+  draft.value=composer.text;draftCount.textContent=Array.from(composer.text).length+({
+ de:' / 300 Zeichen · Nur für diese Sitzung',
+ en:' / 300 characters · This session only',
+ es:' / 300 caracteres · Solo esta sesión',
+ fr:' / 300 caractères · Cette session seulement'
+})[activeLanguage];
   undoDraft.disabled=editHistory.length===0;
   speakDraft.disabled=!composer.text.trim();clearArmed=false;clearDraft.textContent=localizedMessage('Satz löschen');
   refreshSuggestions();
@@ -1152,7 +1157,9 @@ function updateLanguageControls(){
   group.setAttribute('aria-label',(activeLanguage==='en'?'Row ':activeLanguage==='es'?'Fila ':activeLanguage==='fr'?'Rangée ':'Reihe ')+(i+1));
   buttons.forEach((btn,j)=>{
    const key=btn.dataset.languageKey||ROWS[i][j];
-   btn.setAttribute('aria-label',key===' '?localizedMessage('Leerzeichen'):key==='⌫'?localizedMessage('Letztes Zeichen entfernen'):key);
+   if(i===5&&j===4)btn.textContent=localizedMessage('Satz vorlesen');
+   if(i===5&&j===5)btn.textContent=localizedMessage(letterOnlyMode?'Wörter an':'Zurück');
+   btn.setAttribute('aria-label',key===' '?localizedMessage('Leerzeichen'):key==='⌫'?localizedMessage('Letztes Zeichen entfernen'):i===5&&j===4?localizedMessage('Satz vorlesen'):i===5&&j===5?localizedMessage(letterOnlyMode?'Wortvorschläge wieder einschalten':'Zurück zur Reihenauswahl.'):key);
   });
  });
  controlButtons.forEach((btn,i)=>{btn.textContent=localizedMessage(ACTIONS[i]);btn.setAttribute('aria-label',btn.textContent);});
