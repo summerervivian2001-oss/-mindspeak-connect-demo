@@ -1103,6 +1103,23 @@ function localizedMessage(message){
    return message.replace('Markiert: ',localizedMessage('Markiert: ')).replace(' · Reihe ',localizedMessage(' · Reihe ')).replace(' · Feld ',localizedMessage(' · Feld ')).replace(' · ↓ zurück zu ',localizedMessage(' · ↓ zurück zu '));
  }
  if(message.startsWith('Simulierter Impuls abgelehnt: '))return ({en:'Simulated impulse rejected: ',es:'Impulso simulado rechazado: ',fr:'Impulsion simulée rejetée : '})[activeLanguage]+message.slice(30);
+ if(message.startsWith('↶ Rückgängig'))return '↶ '+localizedMessage('Rückgängig');
+ if(message.startsWith('Tastereingabe aktiv. ')){
+  const label=message.includes('Leertaste')?({en:'Space',es:'Espacio',fr:'Espace'})[activeLanguage]:'Enter';
+  return ({
+   en:'Switch input active. '+label+' is assigned. First press starts scanning; later presses select the highlighted item.',
+   es:'Pulsador activo. Tecla '+label+' asignada. La primera pulsación inicia el barrido y las siguientes confirman la opción resaltada.',
+   fr:'Contacteur actif. Touche '+label+' assignée. La première pression lance le balayage et les suivantes choisissent la sélection.'
+  })[activeLanguage];
+ }
+ if(message.startsWith('Taster neu eingestellt: ')){
+  const label=message.includes('Leertaste')?({en:'Space',es:'Espacio',fr:'Espace'})[activeLanguage]:'Enter';
+  return ({
+   en:'Switch key changed to '+label+'. Next press starts or confirms scanning.',
+   es:'Tecla del pulsador cambiada a '+label+'. La siguiente pulsación inicia o confirma.',
+   fr:'Touche du contacteur passée à '+label+'. La prochaine pression lance ou confirme.'
+  })[activeLanguage];
+ }
  if(message.startsWith('Tastereingabe ignoriert: '))return ({en:'Switch press ignored: ',es:'Pulsación ignorada: ',fr:'Pression ignorée : '})[activeLanguage]+message.slice('Tastereingabe ignoriert: '.length);
  if(message.startsWith('Tasterimpuls '))return ({en:'Switch impulse ',es:'Impulso del pulsador ',fr:'Impulsion du contacteur '})[activeLanguage]+message.slice('Tasterimpuls '.length).replace(' erkannt: ',' detected: ').replace('Scan läuft; nur gezielte Auswahl wird ausgeführt.','Scan running; only deliberate selections are activated.').replace('Scan beendet; nächster Impuls startet erneut.','Scan finished; the next press starts again.').replace('Taste loslassen vor erneutem Drücken.','Release before pressing again.');
  return message;
