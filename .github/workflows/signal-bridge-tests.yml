@@ -1,0 +1,28 @@
+name: Signal bridge checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - feature/eeg-signal-bridge
+
+permissions:
+  contents: read
+
+jobs:
+  signal-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check module syntax
+        run: |
+          node --check signal-bridge.js
+          node --check tests/signal-bridge.test.cjs
+      - name: Run behavior tests
+        run: node --test tests/signal-bridge.test.cjs
