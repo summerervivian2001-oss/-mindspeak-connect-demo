@@ -1236,7 +1236,7 @@ function setLanguage(requested){
   button.setAttribute('aria-label',all[i]+I18N_ARIA[requested].select);
  });
  const layout=localizedKeyboardRows();
- keyboardButtons.forEach(({buttons},i=>{
+ keyboardButtons.forEach(({buttons},i)=>{
   if(i===5)return;
   buttons.forEach((btn,j)=>{
    const char=layout[i][j];
