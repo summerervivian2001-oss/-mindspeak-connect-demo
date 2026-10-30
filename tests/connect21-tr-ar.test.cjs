@@ -1242,7 +1242,7 @@ test('2.0 translates essential labels and care help and options to English',()=>
   ['speed-label',/Time per step/],['rounds-label',/Automatic stop/],
   ['care-advice',/Personal care/],['write-advice',/Undo/],
   ['scan-overview',/on-screen joystick/],['word-scan-help',/Scan suggestions/],
-  ['footer-localized',/MindSpeak Connect 2.0/]
+  ['footer-localized',/MindSpeak Connect 2.1/]
  ])assert.match(ids.get(id).textContent,re,id);
 });
 test('2.0 translates Spanish and French configuration and on-screen controls',()=>{
