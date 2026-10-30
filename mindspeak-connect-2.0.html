@@ -554,7 +554,7 @@ if(!externalSwitchKey.value)externalSwitchKey.value='Space';
 externalSwitchToggle.setAttribute('aria-pressed','false');
 function disableExternalSwitch(message){
  externalSwitchEnabled=false;keyGate.reset();externalSwitchToggle.setAttribute('aria-pressed','false');
- externalSwitchToggle.textContent='Tastereingabe aktivieren';
+ externalSwitchToggle.textContent=localizedMessage('Tastereingabe aktivieren');
  externalSwitchStatus.textContent=localizedMessage(message||'Tastereingabe deaktiviert.');
 }
 function updateSwitchStatus(message){externalSwitchStatus.textContent=localizedMessage(message);}
@@ -563,7 +563,7 @@ externalSwitchToggle.addEventListener('click',()=>{
  if(inputMode!=='switch')chooseInputMethod('switch');
  keyGate.reset();externalSwitchEnabled=true;switchAcceptCount=0;
  externalSwitchToggle.setAttribute('aria-pressed','true');
- externalSwitchToggle.textContent='Tastereingabe deaktivieren';
+ externalSwitchToggle.textContent=localizedMessage('Tastereingabe deaktivieren');
  updateSwitchStatus('Tastereingabe aktiv. '+(externalSwitchKey.value==='Space'?'Leertaste':'Enter')+' ist zugewiesen. Erster Tastendruck startet den Scan, weitere wählen das markierte Feld.');
 });
 externalSwitchKey.addEventListener('change',()=>{
@@ -792,8 +792,8 @@ function paintSuggestionButtons(){
 }
 function paintMode(){
   letterScanToggle.setAttribute('aria-pressed',String(letterOnlyMode));
-  letterScanToggle.textContent=letterOnlyMode?'Wortvorschläge wieder einschalten':'Direkt Buchstaben scannen';
-  keyboardButtons[5].buttons[5].textContent=letterOnlyMode?'Wörter an':'Zurück';
+  letterScanToggle.textContent=localizedMessage(letterOnlyMode?'Wortvorschläge wieder einschalten':'Direkt Buchstaben scannen');
+  keyboardButtons[5].buttons[5].textContent=localizedMessage(letterOnlyMode?'Wörter an':'Zurück');
   keyboardButtons[5].buttons[5].setAttribute('aria-label',letterOnlyMode?'Wortvorschläge wieder einschalten':'Zurück zur Reihenauswahl');
 }
 function refreshSuggestions(){
@@ -843,7 +843,7 @@ function insertSuggestedWord(word){
 function displayDraft(){
   draft.value=composer.text;draftCount.textContent=Array.from(composer.text).length+' / 300 Zeichen · Nur für diese Sitzung';
   undoDraft.disabled=editHistory.length===0;
-  speakDraft.disabled=!composer.text.trim();clearArmed=false;clearDraft.textContent='Satz löschen';
+  speakDraft.disabled=!composer.text.trim();clearArmed=false;clearDraft.textContent=localizedMessage('Satz löschen');
   refreshSuggestions();
 }
 function handleKey(key){
@@ -932,8 +932,8 @@ function stopScan(message){
   careOnlyScan=false;
   if(timer!==null)clearInterval(timer);
   timer=null;scanHud.hidden=true;document.body.classList.remove('scanning');
-  scanToggle.textContent='Scan starten';scanToggle.setAttribute('aria-pressed','false');scanChoose.disabled=true;
-  wordScanToggle.textContent='Wortvorschläge scannen';wordScanToggle.setAttribute('aria-pressed','false');
+  scanToggle.textContent=localizedMessage('Scan starten');scanToggle.setAttribute('aria-pressed','false');scanChoose.disabled=true;
+  wordScanToggle.textContent=localizedMessage('Wortvorschläge scannen');wordScanToggle.setAttribute('aria-pressed','false');
   render();if(message)status.textContent=localizedMessage(message);
 }
 function tick(){
@@ -961,8 +961,8 @@ function startScan(kind='keyboard'){
   scanKind=kind;
   scanIndex=0;keyboardScan.reset();cycles=0;
   scanHud.hidden=false;document.body.classList.add('scanning');
-  scanToggle.textContent='Scan stoppen';scanToggle.setAttribute('aria-pressed','true');scanChoose.disabled=false;
-  wordScanToggle.textContent=scanKind==='suggestions'?'Wortscan stoppen':'Wortvorschläge scannen';
+  scanToggle.textContent=localizedMessage('Scan stoppen');scanToggle.setAttribute('aria-pressed','true');scanChoose.disabled=false;
+  wordScanToggle.textContent=localizedMessage(scanKind==='suggestions'?'Wortscan stoppen':'Wortvorschläge scannen');
   wordScanToggle.setAttribute('aria-pressed',String(scanKind==='suggestions'));
   status.textContent=localizedMessage(mode==='quick'?'Scan der Schnellaussagen läuft.':scanKind==='suggestions'?'Wortscan läuft. Wähle ein gelb markiertes Wort.':'Reihenscan läuft. Erst Reihe, dann Taste wählen.');
   // Initialize before first timer tick so the first choice is visible for a full interval.
@@ -1049,7 +1049,7 @@ letterScanToggle.addEventListener('click',()=>{
 autoContinue.addEventListener('click',()=>{
  autoContinueEnabled=!autoContinueEnabled;
  autoContinue.setAttribute('aria-pressed',String(autoContinueEnabled));
- autoContinue.textContent='Nach Zeichen/Wort weiterscannen: '+(autoContinueEnabled?'An':'Aus');
+ autoContinue.textContent=localizedMessage('Nach Zeichen/Wort weiterscannen: '+(autoContinueEnabled?'An':'Aus'));
  status.textContent=localizedMessage(autoContinueEnabled
   ? 'Nach einem Zeichen oder Wort beginnt automatisch wieder der Reihenscan.'
   : 'Nach jedem Zeichen oder Wort stoppt der Scan wieder.');
@@ -1071,13 +1071,13 @@ draft.addEventListener('input',()=>{if(timer!==null)stopScan('Text direkt bearbe
 speakDraft.addEventListener('click',()=>{if(timer!==null)stopScan();handleKey('Satz sprechen');});
 clearDraft.addEventListener('click',()=>{
  if(timer!==null)stopScan();
- if(!clearArmed){clearArmed=true;clearDraft.textContent='Wirklich alles löschen?';draftStatus.textContent=localizedMessage('Zur Bestätigung noch einmal tippen.');return;}
+ if(!clearArmed){clearArmed=true;clearDraft.textContent=localizedMessage('Wirklich alles löschen?');draftStatus.textContent=localizedMessage('Zur Bestätigung noch einmal tippen.');return;}
  const previous=composer.text;composer.setText('');rememberEdit(previous);displayDraft();draftStatus.textContent=localizedMessage('Text gelöscht.');
 });
 repeat.addEventListener('click',()=>{if(last)textToSpeech(last);});
 speechToggle.addEventListener('click',()=>{
  speechEnabled=!speechEnabled;speechToggle.setAttribute('aria-pressed',String(speechEnabled));
- speechToggle.textContent='Sprachausgabe: '+(speechEnabled?'An':'Aus');
+ speechToggle.textContent=localizedMessage('Sprachausgabe: '+(speechEnabled?'An':'Aus'));
  if(!speechEnabled&&'speechSynthesis' in window)window.speechSynthesis.cancel();
 });
 $('speech-stop').addEventListener('click',()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel();});
