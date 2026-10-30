@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1827">
+<meta name="description" content="MindSpeak Connect 0.7 – Schnellaussagen und freies Schreiben, Offline-Simulation ohne EEG">
+<title>MindSpeak Connect 2.1 · Türkisch und Arabisch</title>
+<style>
+:root{color-scheme:dark;--bg:#091725;--panel:#122438;--secondary:#19334a;--line:#49617a;--text:#f1f7fb;--muted:#cbdae6;--mint:#90eed1;--focus:#ffe48a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,textarea,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,textarea:focus-visible,select:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
+.wrap{width:min(920px,100%);margin:auto;padding:clamp(16px,4vw,34px)}
+.eyebrow{color:var(--mint);font-size:.8rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+h1{font-size:clamp(1.8rem,6vw,3rem);line-height:1.18;margin:.35em 0}
+h2{font-size:1.25rem;margin:0 0 .65rem}
+.intro,.small{color:var(--muted)}
+.intro{max-width:780px}
+.small{font-size:.88rem;margin:.5rem 0}
+.notice{border:2px solid #c6a96c;background:#28303a;border-radius:12px;padding:12px 14px;margin:20px 0}
+.panel{border:1px solid var(--line);background:var(--panel);border-radius:19px;padding:clamp(14px,3vw,22px);margin:16px 0}
+.mode-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{background:#24445c;color:var(--text);border:2px solid #8ea9bf;min-height:50px;border-radius:12px;padding:8px 12px;font-weight:700}
+.btn[aria-pressed="true"],.btn.primary{background:var(--mint);color:#052527;border-color:var(--mint)}
+.btn:disabled{opacity:.52;cursor:not-allowed}
+.controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.controls .btn{flex:1 1 160px}
+.phrases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.phrase{border:3px solid var(--line);background:var(--secondary);color:var(--text);border-radius:16px;min-height:116px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:clamp(1rem,3.7vw,1.42rem);font-weight:780}
+.phrase .symbol{font-size:1.9rem;line-height:1}
+.phrase[data-active="true"],.keyboard-row[data-active="true"],.key[data-active="true"]{border-color:var(--focus);background:#38546c;box-shadow:inset 0 0 0 2px var(--focus)}
+.phrase:hover,.key:hover{border-color:var(--mint)}
+.phrase[data-nav-active="true"],.key[data-nav-active="true"]{outline:4px solid var(--focus);outline-offset:2px;box-shadow:0 0 0 2px #07131e;position:relative;z-index:1}
+.joy-pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:440px;margin:12px auto}
+.joy-pad .btn{min-height:58px}
+.joy-pad #joy-up,.joy-pad #joy-down{grid-column:2}
+.joy-pad #joy-left{grid-column:1}
+.joy-pad #joy-confirm{grid-column:2;background:var(--mint);color:#052527}
+.joy-pad #joy-right{grid-column:3}
+.joy-current{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--secondary);font-weight:750}
+/* 1.4.1: Directional controls stay visible while the selected row is in the document. */
+#joystick-demo:not([hidden]){position:fixed;z-index:30;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(350px,calc(100% - 24px));margin:0;padding:7px 9px;border:2px solid var(--mint);border-radius:15px;background:#122438;box-shadow:0 9px 35px #000c}
+#joystick-demo .joy-current{margin:0;padding:5px 8px;font-size:.88rem;line-height:1.2;min-height:31px}
+#joystick-demo .joy-pad{max-width:270px;margin:4px auto;gap:4px}
+#joystick-demo .joy-pad .btn{min-height:44px;padding:4px;font-size:1.05rem}
+#joy-up[data-shortcut="true"]{border-color:var(--focus);background:#3b4c5c;box-shadow:inset 0 0 0 2px var(--focus);color:var(--text)}
+#joystick-demo .joy-current{overflow-wrap:anywhere}
+#joystick-demo .small{display:none}
+body.joystick-active .wrap{padding-bottom:235px}
+body.joystick-active .key,body.joystick-active .phrase{scroll-margin-top:25px;scroll-margin-bottom:235px}
+@media(max-height:540px){#joystick-demo .joy-pad .btn{min-height:44px}#joystick-demo .joy-current{font-size:.82rem;padding:4px}body.joystick-active .wrap{padding-bottom:225px}}
+.keyboard{display:grid;gap:9px;margin:14px 0}
+.keyboard-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;border:3px solid transparent;border-radius:13px;padding:4px;background:#10273d}
+.key{border:2px solid #7994ae;border-radius:9px;background:#28445e;color:var(--text);font-size:clamp(.85rem,3vw,1.18rem);font-weight:750;min-height:54px;padding:5px 1px;overflow-wrap:anywhere;line-height:1.1}
+.key.special{font-size:clamp(.64rem,2.4vw,.87rem)}
+#suggestion-row .key{font-size:clamp(.69rem,2.5vw,.98rem);min-height:63px;border-color:#72cbb1;overflow-wrap:anywhere}
+#suggestion-row .key:disabled{border-color:#49657a;opacity:.42}
+.composer{width:100%;min-height:102px;resize:vertical;padding:13px;border:2px solid #97bac9;border-radius:12px;background:#081f30;color:var(--text);font-size:1.1rem}
+label{font-weight:700;display:block;margin:0 0 4px}
+.output{background:#163339;border:1px solid var(--mint);border-radius:12px;min-height:72px;padding:14px;font-size:clamp(1.1rem,3vw,1.5rem);overflow-wrap:anywhere;font-weight:750}
+select{min-height:48px;background:#0e273c;border:2px solid #99b9ca;color:var(--text);border-radius:10px;padding:6px}
+.scan-hud{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:20;background:#163c42;border:3px solid var(--mint);border-radius:18px;width:min(540px,calc(100% - 20px));box-shadow:0 7px 32px #000a;padding:12px}
+.scan-hud[hidden],[hidden]{display:none!important}
+.scan-label{margin:5px 0 10px;font-size:clamp(1.15rem,5vw,1.5rem);font-weight:780;overflow-wrap:anywhere}
+.scan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scan-actions .btn{min-height:54px;padding:7px 8px;font-size:.91rem}
+.scan-actions .btn:last-child{grid-column:span 2;min-height:44px}
+body.scanning .wrap{padding-bottom:230px}
+#live-status{min-height:30px;color:#c0edf3;font-weight:650}
+footer{font-size:.83rem;color:var(--muted);padding:18px 0 40px}
+@media(max-width:360px){.phrases{gap:7px}.phrase{min-height:100px}.key{min-height:49px}.scan-actions .btn{font-size:.82rem}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+html[dir="rtl"] .joy-pad,html[dir="rtl"] .scan-actions{direction:ltr}
+html[dir="rtl"] .phrases,html[dir="rtl"] .keyboard-row{direction:rtl}
+html[dir="rtl"] #draft,html[dir="rtl"] .output,html[dir="rtl"] .scan-label{direction:rtl;text-align:right}
+html[dir="rtl"] .intro,html[dir="rtl"] .small{line-height:1.75}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="eyebrow">MindSpeak · Connect · Version 2.1 · Konzepttest</div>
+<h1 id="app-title">Deine Worte. Deine Entscheidung.</h1>
+<p class="intro" id="app-intro">Wähle schnelle Aussagen oder schreibe einen eigenen Satz – direkt durch Berührung oder mit einem Ein-Tasten-Scan. <strong>Kein EEG, keine echte Gehirnsteuerung.</strong></p>
+<section class="panel" id="language-panel" aria-labelledby="language-title" style="margin:12px 0">
+<label id="language-title" for="language-select"><strong>Sprache / Language / Idioma / Langue</strong></label>
+<select id="language-select" style="width:100%">
+<option value="de" selected>Deutsch</option>
+<option value="en">English</option>
+<option value="es">Español</option>
+<option value="fr">Français</option>
+<option value="tr">Türkçe</option>
+<option value="ar">العربية (الفصحى)</option>
+</select>
+<p class="small" id="language-status" role="status" aria-live="polite">Deutsch aktiv. Pflege-Sätze und Wortvorschläge werden in der gewählten Sprache angeboten. Browser-Sprachstimmen müssen auf dem Gerät verfügbar sein.</p>
+<p class="small" id="language-note">Wichtig: Um eine unbeabsichtigte Vermischung von Sprachen zu vermeiden, muss ein begonnener Satz vor dem Sprachwechsel gelöscht oder beendet werden. Die Auswahl startet keine Sprachausgabe.</p>
+</section>
+<div class="notice" role="note" id="safety-notice"><strong>Forschungssimulation:</strong> Diese Website ist kein geprüftes Hilfsmittel. „Bitte helfen“ löst <strong>keinen Notruf</strong> aus. Eine P300-EEG-Erkennung oder medizinische Funktion ist nicht angeschlossen.</div>
+<section class="panel" aria-labelledby="mode-title">
+<h2 id="mode-title">Wie möchtest du kommunizieren?</h2>
+<div class="mode-buttons" role="group" aria-label="Kommunikationsmodus">
+<button class="btn" id="mode-quick" type="button" aria-pressed="true">⚡ Schnellauswahl</button>
+<button class="btn" id="mode-write" type="button" aria-pressed="false">✍ Freies Schreiben</button>
+</div>
+<div class="controls" style="margin-top:12px">
+<button type="button" id="top-care-joystick" class="btn primary">🕹️ Direkt zu den Pflege-Sätzen</button>
+<button type="button" id="top-care-switch" class="btn primary">♿ Pflege-Scan starten (ein Taster)</button>
+<button type="button" id="quick-joystick" class="btn">🕹️ Mit Joystick schreiben</button>
+</div>
+<label for="input-method" style="margin-top:12px" id="input-method-label">Bedienungsart direkt hier auswählen</label>
+<select id="input-method" aria-describedby="method-help" style="width:100%">
+<option value="switch" selected id="method-switch">Ein-Tasten-Scan (gelbe Markierung)</option>
+<option value="joystick" id="method-joystick">Joystick-Simulation (Pfeile + OK)</option>
+<option value="touch" id="method-touch">Nur direkte Berührung</option>
+</select>
+<p class="small" id="method-help">Joystick: Pfeile und OK auf dem Bildschirm. Externer Ein-Taster: erst den Tastatur-/HID-Test aktivieren. Kein Gerät wird automatisch verbunden oder erkannt.</p>
+<div class="panel" id="external-switch-panel" style="margin:12px 0;background:#153038" aria-label="Externer Ein-Taster per Bluetooth- oder USB-Tastatur">
+<strong id="external-title">Externer Ein-Taster · Tastatur/HID-Test</strong>
+<p class="small" id="external-description">Ein kompatibler Taster muss wie eine Tastatur <strong>Leertaste</strong> oder <strong>Enter</strong> senden (z. B. per Bluetooth oder USB-Adapter). Diese Demo kann keine Hardwareverbindung prüfen. Auf dem Smartphone muss der Browser die Tastendrücke erhalten.</p>
+<label for="external-switch-key" id="external-key-label">Welche Taste sendet dein Eingabegerät?</label>
+<select id="external-switch-key"><option value="Space" id="key-space">Leertaste (Space)</option><option value="Enter" id="key-enter">Enter</option></select>
+<button type="button" class="btn" id="external-switch-enable" aria-pressed="false" style="width:100%;margin-top:9px">Tastereingabe aktivieren</button>
+<p id="external-switch-status" class="small" role="status" aria-live="polite">Nicht aktiviert. Beim Test: ersten Tastendruck zum Starten des Scans, weitere Tastendrücke zur bewussten Auswahl.</p>
+<p class="small" id="external-safety">Sicherheit: Gehaltene Tasten, automatische Wiederholungen und Signale innerhalb von 650 ms nach einer akzeptierten Eingabe werden verworfen. Nur eine zuvor ausgewählte Taste gilt. ESC oder App-Wechsel deaktiviert die Tastereingabe. Texteingabefelder bleiben geschützt.</p>
+</div>
+<label for="auto-suggest-focus" style="display:flex;gap:10px;align-items:flex-start;margin-top:10px">
+<input type="checkbox" id="auto-suggest-focus" checked style="width:21px;height:21px;flex:none;margin-top:2px">
+<span id="focus-suggestion-note">Wortvorschläge nach jedem Buchstaben direkt markieren <small>(Testfunktion, nur Joystick; erst OK fügt ein. ↓ zeigt den letzten Buchstaben, zum Beispiel „↓ B“, auch nach Wechsel zwischen Wortvorschlägen.)</small></span>
+</label>
+</section>
+<section class="panel" id="quick-view" aria-labelledby="quick-title">
+<h2 id="quick-title">Schnelle Aussagen</h2>
+<div id="phrases" class="phrases" role="group" aria-label="Alltägliche Aussagen auswählen"></div>
+<h3 style="font-size:1.1rem;margin:20px 0 6px" id="care-title">Pflege und Körperpflege</h3>
+<p class="small" id="care-advice">Auch sensible Bedürfnisse dürfen klar und selbstbestimmt ausgesprochen werden. Jede Aussage wird erst nach bewusster Auswahl ausgegeben; ein automatischer Pflegeruf wird nicht gesendet.</p>
+<button type="button" class="btn primary" id="care-joystick" style="width:100%;margin-bottom:10px">🕹️ Direkt zu den Pflege-Sätzen</button>
+<div id="care-phrases" class="phrases" role="group" aria-labelledby="care-title"></div>
+</section>
+<section class="panel" id="write-view" aria-labelledby="write-title" hidden>
+<h2 id="write-title">Eigenen Satz schreiben</h2>
+<p class="small" id="write-advice">Neu in 1.3: Ein Fehlklick lässt sich über „Rückgängig“ zurücknehmen – mit dem Ein-Tasten-Scan oder direkt per Knopf. Eine zusätzliche Steuerungsreihe enthält Rückgängig, ABC-Wechsel und Scan-Stopp. Wortvorhersagen bleiben verfügbar; die Umstellung ist freiwillig und wird niemals automatisch ausgelöst.</p>
+<label for="draft" id="draft-label">Dein Satz (maximal 300 Zeichen)</label>
+<textarea id="draft" class="composer" maxlength="300" spellcheck="true" placeholder="Hier erscheint dein eigener Satz …"></textarea>
+<p class="small" id="draft-count">0 / 300 Zeichen · Nur auf diesem Gerät, für diese Sitzung</p>
+<div id="suggestion-wrap" aria-label="Wortvorschläge" class="panel" style="margin:14px 0;padding:10px;background:#153c3b">
+<p class="small" style="margin:0 0 7px" id="suggestion-advice"><strong>Wortvorschläge 1.7 – auch für Pflege und Alltag, lokal und ohne Internet</strong><br>Durch Antippen oder Ein-Tasten-Scan einsetzen. Ein Wort wird nur auf Wunsch eingefügt.</p>
+<div id="suggestion-row" class="keyboard-row" role="group" aria-label="Sechs mögliche Wortergänzungen"></div>
+<button type="button" class="btn primary" id="word-scan-toggle" style="width:100%;margin-top:10px" aria-pressed="false">Wortvorschläge scannen</button>
+<p class="small" id="skip-explanation">Im normalen Reihenscan ist das erste Feld „ABC →“. Wähle dieses Feld mit dem Ein-Tasten-Scan, um ohne Vorschläge Buchstaben zu wählen. Im Buchstabenmodus heißt die letzte Taste „Wörter an“.</p>
+<p class="small" id="word-examples">Neu: <strong>ZUR, AUF, DEM, MIT</strong> sowie <strong>STUHLGANG, WASCHEN, INTIMPFLEGE, EINLAGE, RASUR</strong> und weitere Pflegewörter. Du entscheidest weiterhin mit OK, was eingefügt oder ausgegeben wird.</p>
+<p class="small" id="word-scan-help">Tippe auf „Wortvorschläge scannen“. Der Scan bewegt sich dann <strong>nur durch die angezeigten Wörter</strong>. Wenn dein Wort gelb markiert ist, tippe auf „Dieses Feld auswählen“. Es wird nur eingefügt, nicht gesprochen.</p>
+</div>
+<div id="keyboard" class="keyboard" role="group" aria-label="Bildschirmtastatur mit sechs Reihen"></div>
+<p class="small" id="keyboard-tip">Extra: Die letzte Reihe im kombinierten und im reinen Buchstabenscan heißt „Aktionen“ und bietet „Rückgängig“, „Nur ABC“, „Wörter an“ und „Scan stoppen“. Diese Aktionen werden ausschließlich auf bewusste Auswahl ausgeführt.</p>
+<div id="control-row" class="keyboard-row" aria-label="Scan-Steuerungsreihe"></div>
+<div class="controls">
+<button type="button" id="speak-draft" class="btn primary" disabled>Satz vorlesen</button>
+<button type="button" id="clear-draft" class="btn">Satz löschen</button>
+<button type="button" id="undo-draft" class="btn" disabled>↶ Letzte Eingabe rückgängig</button>
+</div>
+<p class="small" id="draft-status" aria-live="polite">Der Text wird erst nach „Satz vorlesen“ gesprochen.</p>
+</section>
+<section class="panel" aria-labelledby="speech-title">
+<h2 id="speech-title">Letzte gesprochene Aussage</h2>
+<div class="output" id="last-message" aria-live="polite">Noch keine Aussage gewählt</div>
+<p id="live-status" aria-live="polite">Wähle einen Kommunikationsmodus und beginne.</p>
+<div class="controls">
+<button type="button" class="btn" id="repeat" disabled>Wiederholen</button>
+<button type="button" class="btn" id="speech-toggle" aria-pressed="true">Sprachausgabe: An</button>
+<button type="button" class="btn" id="speech-stop">Vorlesen stoppen</button>
+</div>
+</section>
+<section class="panel" aria-labelledby="scan-title">
+<h2 id="scan-title">Eingabeweg und Ein-Tasten-Scan</h2>
+<p class="small" id="scan-overview">Das kompakte Steuerkreuz bleibt unten sichtbar. Neu in 1.6: Nach einem über den Joystick eingegebenen Buchstaben wird bei passenden Ergänzungen optional direkt der erste gültige Wortvorschlag markiert. OK wählt ihn bewusst, ↓ führt zum letzten Buchstaben zurück. Außerdem gilt weiter: Wenn „Rückgängig“ von der ersten Wortvorschlagsposition direkt erreichbar ist, zeigt die obere Pfeiltaste sichtbar „↑ ↶“ an. Das ist nur ein Hinweis: Erst ↑ verschiebt die Markierung, und erst OK nimmt die Eingabe zurück. Ein externer Joystick muss Tastatur-Pfeile und Enter senden. Kein EEG angeschlossen.</p>
+<div id="joystick-demo" hidden>
+<p class="joy-current" id="joystick-current" aria-live="polite">Joystick noch nicht gewählt.</p>
+<div class="joy-pad" role="group" aria-label="Joystick-Simulation">
+<button type="button" class="btn" id="joy-up">↑</button>
+<button type="button" class="btn" id="joy-left">←</button>
+<button type="button" class="btn" id="joy-confirm">OK</button>
+<button type="button" class="btn" id="joy-right">→</button>
+<button type="button" class="btn" id="joy-down">↓</button>
+</div>
+<p class="small" id="joystick-tip">Pfeile bewegen nur die gelbe Auswahl und springen am Rand auf die gegenüberliegende Seite. Erst OK löst die gewählte Aktion aus. Touch bleibt verfügbar.</p>
+</div>
+<p class="small" id="scan-mode-help">Im Schreibmodus sucht der Scan zunächst eine der sechs Reihen. Nach der Reihenauswahl sucht er eine Taste innerhalb dieser Reihe. Für jeden Schritt musst du ausdrücklich „Auswählen“ tippen. Wähle jetzt auch die erste Reihe mit Wortvorschlägen. Nach einer Wortergänzung oder einem Buchstaben läuft der Scan standardmäßig automatisch weiter, ohne selbst etwas auszuwählen oder zu sprechen. Auch Leertaste mit Tastaturfokus außerhalb von Bedienelementen funktioniert.</p>
+<div class="controls">
+<button type="button" class="btn primary" id="scan-toggle" aria-pressed="false">Scan starten</button>
+<div><label for="scan-speed" id="speed-label">Zeit pro Schritt</label><select id="scan-speed"><option value="1000" id="speed-1000">1 Sekunde</option><option value="1500" id="speed-1500">1,5 Sekunden</option><option value="2000" selected id="speed-2000">2 Sekunden</option><option value="3000" id="speed-3000">3 Sekunden</option><option value="4500" id="speed-4500">4,5 Sekunden</option></select></div>
+<div><label for="scan-rounds" id="rounds-label">Automatischer Stopp</label><select id="scan-rounds"><option value="1" id="round-1">Nach 1 Umlauf</option><option value="2" id="round-2">Nach 2 Umläufen</option><option value="3" selected id="round-3">Nach 3 Umläufen</option><option value="0" id="round-0">Ohne Zeitlimit</option></select></div>
+<button type="button" class="btn" id="scan-choose" disabled>Aktuell Markiertes wählen</button>
+</div>
+<div class="controls" style="margin-top:12px">
+<button type="button" class="btn" id="auto-continue" aria-pressed="true">Nach Zeichen/Wort weiterscannen: An</button>
+<button type="button" class="btn" id="letter-scan-toggle" aria-pressed="false">Direkt Buchstaben scannen</button>
+</div>
+<p class="small" id="scan-help">Wähle deinen Modus und starte den Scan. Die aktive Auswahl wird unten eingeblendet. Die erste Vorschlagsreihe enthält „ABC →“ zum Überspringen. Am Ende der Scanreihen ist zusätzlich die Steuerungsreihe mit „↶ Rückgängig“ und Wechsel-Tasten. Im Buchstabenmodus kann „Wörter an“ die Wortvorhersagen zurückholen. Ein Zurücknehmen spricht und sendet nichts. Escape oder „Scan stoppen“ beendet den Scan.</p>
+<details><summary id="mock-summary">Simulierte Auswahl statt EEG (Techniktest)</summary>
+<p class="small" id="mock-explanation">Die Taste sendet einen manuellen Testimpuls an unseren technischen Auswahl-Eingang. Ein echtes EEG-Signal wird dabei weder aufgenommen noch dekodiert.</p>
+<button type="button" id="mock-signal" class="btn">Test-Impuls senden (kein EEG)</button>
+<p class="small" id="mock-result" role="status" aria-live="polite">Noch kein Impuls.</p>
+</details>
+</section>
+<section id="scan-hud" class="scan-hud" aria-label="Aktive Scansteuerung" hidden>
+<p class="small" id="scan-phase">Scan läuft</p>
+<p class="scan-label" id="scan-current">Ja</p>
+<div class="scan-actions">
+<button type="button" class="btn primary" id="hud-choose">Dieses Feld auswählen</button>
+<button type="button" class="btn" id="hud-mock">Test-Impuls (kein EEG)</button>
+<button type="button" class="btn" id="hud-stop">Scan stoppen</button>
+</div>
+</section>
+<details class="panel">
+<summary><strong id="privacy-summary">Datenschutz und technische Grenzen</strong></summary>
+<p id="privacy-body">Diese Demo führt keine EEG-Messung durch. Sie versendet keine Nachrichten und führt keine Notrufaktion aus. Entwürfe und gesprochene Aussagen liegen nur im Arbeitsspeicher der aktuellen Browserseite und werden beim Neuladen verworfen. Die Texte werden vom Demo-Code nicht auf einen MindSpeak-Server übertragen. Abhängig von den aktivierten Android-/Browserstimmen kann die Sprachausgabe über Dienste des Betriebssystems erfolgen. Es gibt weder ein Sprachmodell zur automatischen Auswahl noch eine Verbindung zum P300-Forschungsdatensatz.</p>
+</details>
+<footer id="footer-localized">MindSpeak Connect 2.1 · Bedienungsprototyp · Keine medizinische Zweckbestimmung · Keine echte P300-/EEG-Steuerung.</footer>
+</main>
+<script>
+/* MindSpeak 0.7 – isolated keyboard and two-stage scan; no EEG or storage. */
+(function (root) {
+  'use strict';
+  const ROWS = Object.freeze([
+    Object.freeze(['A','B','C','D','E','F']),
+    Object.freeze(['G','H','I','J','K','L']),
+    Object.freeze(['M','N','O','P','Q','R']),
+    Object.freeze(['S','T','U','V','W','X']),
+    Object.freeze(['Y','Z','Ä','Ö','Ü','ß']),
+    Object.freeze([' ','.','?','⌫','Satz sprechen','Zurück'])
+  ]);
+  class HybridComposer {
+    constructor(maxLength=300) {
+      if (!Number.isInteger(maxLength) || maxLength < 1) throw new RangeError('Invalid maxLength');
+      this.maxLength=maxLength; this.text='';
+    }
+    setText(text) {
+      if (typeof text !== 'string') throw new TypeError('String required');
+      this.text=Array.from(text).slice(0,this.maxLength).join('');
+      return this.text;
+    }
+    apply(key) {
+      if (key === '⌫') { this.text=Array.from(this.text).slice(0,-1).join('');return 'changed'; }
+      if (key === 'Zurück') return 'back';
+      if (key === 'Satz sprechen') return this.text.trim() ? 'speak' : 'empty';
+      if (!ROWS.some(r=>r.includes(key)) && !/^[\p{L}!,\x27-]$/u.test(key)) throw new RangeError('Unknown key');
+      if (Array.from(this.text).length >= this.maxLength) return 'full';
+      this.text+=key;
+      return 'changed';
+    }
+  }
+  class RowColumnScan {
+    constructor(rows=ROWS) {
+      if (!Array.isArray(rows) || rows.length<2 || rows.some(r=>!Array.isArray(r)||r.length!==6)) throw new TypeError('Expected at least two scan rows of six keys');
+      this.rows=rows;this.reset();
+    }
+    reset(){this.stage='row';this.index=0;this.row=0;}
+    next(){this.index=(this.index+1)%(this.stage==='row'?this.rows.length:this.rows[this.row].length);return this.index;}
+    label() {
+      return this.stage==='row'
+        ? 'Reihe '+(this.index+1)+': '+this.rows[this.index].map(k=>k===' '?'Leerzeichen':k).join(' · ')
+        : this.rows[this.row][this.index]===' ' ? 'Leerzeichen' : this.rows[this.row][this.index];
+    }
+    choose(){
+      if(this.stage==='row'){this.row=this.index;this.stage='key';this.index=0;return {kind:'row',row:this.row};}
+      const key=this.rows[this.row][this.index];
+      if(key==='Zurück'){this.reset();return {kind:'back'};}
+      this.reset();return {kind:'key',key};
+    }
+  }
+  root.MindSpeakHybridInput={ROWS,HybridComposer,RowColumnScan};
+  if(typeof module==='object' && module.exports) module.exports={ROWS,HybridComposer,RowColumnScan};
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script>
+/* MindSpeak Connect 1.1 – local vocabulary expansion; no network, no model. */
+(function(root){
+'use strict';
+const DICTIONARY=Object.freeze([
+ 'ICH','MÖCHTE','BRAUCHE','HABE','BIN','WILL','KEINE','TAG','MIR','GEHT','GUT','BITTE','DANKE',
+ 'HALLO','JA','NEIN','HILFE','WASSER','SCHMERZEN','PAUSE','ESSEN','TRINKEN',
+ 'TOILETTE','MEDIKAMENTE','MEDIKAMENT','TABLETTEN','TABLETTE','FENSTER','TÜR','ÖFFNEN','DECKE','KOPF','ARZT','ÄRZTIN','ÜBEL','ATMEN','SCHLUCKEN','AUFSTEHEN','HINLEGEN','KANN','NICHT','DU','SIE','MEIN','MEINE','MICH','ETWAS','MEHR','WENIGER',
+ 'HEISS','KALT','HUNGER','DURST','MÜDE','ANGST','MUSS','RUHEN','HELFEN','HOLEN',
+ 'JA','JETZT','SPÄTER','ZU','VIEL','WIE','WARUM','WO','WAS','WANN','OKAY',
+ 'GUTEN','MORGEN','ABEND','NACHT','VERSTEHE','BITTE','SEHR','ES','IST','DAS',
+ 'WAR','EIN','EINE','DER','DIE','UND','ODER','NEU','SORGE','MACHEN','GEHEN',
+ // Added after existing entries: legacy contextual suggestions retain rank.
+ 'ZUR','ZUM','AUF','DEM','DEN','DES','EINEM','EINEN','EINER','EINES',
+ 'IM','AM','ANS','AN','IN','MIT','FÜR','VON','VOM','BEI','BEIM','NACH',
+ 'ÜBER','UNTER','NEBEN','VOR','HINTER','ZWISCHEN','OHNE','SEIT','BIS',
+ 'DURCH','GEGEN','UM','WEIL','DASS','WENN','DANN','ABER','AUCH','NOCH',
+ 'SCHON','WIEDER','NUR','SO','DA','DORT','HIER','HEUTE','GESTERN',
+ 'WIR','UNS','EUCH','IHR','IHN','IHNEN','DIR','DEIN','DEINE','DEINEN',
+ 'MEINEM','MEINEN','SEIN','SEINE','IHRE','GEHE','GEHST','GEHT',
+ 'LIEGE','LIEGEN','LEGE','LEGEN','SITZE','SITZEN','STEHE','STEHEN',
+ 'BETT','SOFA','TISCH','STUHL','BODEN','HAUS','HAUSE','WEG','BAD',
+ 'ZIMMER','KÜCHE','DRAUSSEN','DRINNEN','LINKS','RECHTS','OBEN','UNTEN',
+ 'HIN','HER','GEBEN','BRINGEN','NEHMEN','NIMM','HOL','FINDEN',
+ // Care-specific vocabulary: neutral wording and self-determination.
+ 'HATTE','STUHLGANG','URIN','HARNSCHLUSS','BLASE','DARMENTLEERUNG',
+ 'WASCHEN','WASCH','WASCHEN','REINIGUNG','REINIGEN','SAUBER','SAUBERMACHEN',
+ 'INTIMPFLEGE','KÖRPERPFLEGE','PFLEGE','PFLEGEN','PFLEGEKRAFT','PFLEGER',
+ 'EINLAGE','INKONTINENZEINLAGE','INKONTINENZMATERIAL','WINDEL',
+ 'WECHSELN','WECHSLE','WECHSEL','FRISCHE','FRISCHES','FRISCHEN','SAUBERE',
+ 'NASS','TROCKEN','SCHMUTZIG','KLEIDUNG','UNTERWÄSCHE','BETTWÄSCHE',
+ 'LAGERUNG','UMLAGERN','DREHEN','DREH','UMDREHEN','RÜCKEN','SEITE',
+ 'HAUT','WUND','WUNDE','JUCKREIZ','BRENNEN','SCHMERZHAFT',
+ 'HILF','HILFST','UNTERSTÜTZUNG','SCHAM','PRIVATSPHÄRE','ALLEIN',
+ 'FERTIG','FERTIGWERDEN','FÜHLEN','WOHL','UNWOHL','PEINLICH',
+ 'MÖGLICH','DARF','SOLL','ANFASSEN','BERÜHREN','LANGSAM','VORSICHTIG',
+ 'RASUR','RASIEREN','RASIERE','RASIERT','RASIERST','BART','GESICHT','BEINE',
+ 'ACHSELN','INTIMBEREICH','STOPP','AUFHÖREN','EINVERSTANDEN','FRAGEN'
+]);
+const UNIQUE=Object.freeze([...new Set(DICTIONARY)]);
+const NEXT=Object.freeze({
+ 'ICH':['MÖCHTE','BRAUCHE','HABE','BIN','KANN','WILL'],
+ 'MÖCHTE':['BITTE','WASSER','ESSEN','TRINKEN','RUHEN','MEHR'],
+ 'BRAUCHE':['HILFE','WASSER','MEDIKAMENTE','TABLETTEN','EINE','PAUSE'],
+ 'HABE':['SCHMERZEN','HUNGER','DURST','ANGST','EINE','KEINE'],
+ 'BITTE':['HELFEN','ÖFFNEN','FENSTER','TÜR','WASSER','NICHT'],
+ 'MIR':['GEHT','IST','BITTE','HILFE'],
+ 'ES':['IST','GEHT','WAR'],
+ 'FENSTER':['ÖFFNEN','ZU'],
+ 'TÜR':['ÖFFNEN','ZU'],
+ 'MEDIKAMENTE':['BITTE','JETZT','SPÄTER'],
+ 'GUTEN':['MORGEN','ABEND','TAG'],
+ // Add contextual care-language completion without reordering legacy ICH/BRAUCHE/DU paths.
+ 'HATTE':['STUHLGANG','DURST','ANGST','SCHMERZEN'],
+ 'STUHLGANG':['BITTE','REINIGEN','GEHABT'],
+ 'WECHSLE':['MEINE','DIE','EINLAGE','WINDEL'],
+ 'WASCH':['MICH','MEINE','BITTE'],
+ 'PFLEGE':['BITTE','HILFE','INTIMPFLEGE'],
+ 'INTIMPFLEGE':['BITTE','JETZT','SPÄTER'],
+ 'REINIGUNG':['BITTE','JETZT','SPÄTER'],
+ 'EINLAGE':['WECHSELN','BITTE','JETZT'],
+ 'RASUR':['BITTE','JETZT','SPÄTER'],
+ 'RASIERE':['MEIN','MICH','BITTE'],
+ 'RASIEREN':['BITTE','GESICHT','BART','BEINE'],
+ 'ZUR':['TOILETTE','TÜR','KÜCHE','ÄRZTIN'],
+ 'ZUM':['ARZT','BAD','BETT'],
+ 'AUF':['DIE','DEM','DEN','TOILETTE','SEITE'],
+ 'DEM':['BETT','SOFA','BODEN'],
+ 'BEIM':['WASCHEN','UMLAGERN','ESSEN','ANZIEHEN']
+});
+const INITIAL=Object.freeze(['ICH','JA','NEIN','BITTE','DANKE','HALLO']);
+const CHARS=/[A-Za-zÄÖÜäöüßẞ]/u;
+function parseContext(text){
+ if(typeof text!=='string')throw new TypeError('Text required');
+ const match=text.match(/([A-Za-zÄÖÜäöüßẞ]+)$/u);
+ const prefix=match?match[1].toLocaleUpperCase('de-DE'):'';
+ const before=match?text.slice(0,-match[1].length):text;
+ const words=before.trim().split(/[^A-Za-zÄÖÜäöüßẞ]+/u).filter(Boolean);
+ const previous=words.length?words[words.length-1].toLocaleUpperCase('de-DE'):'';
+ return {prefix,previous};
+}
+function suggestWords(text,limit=6){
+ if(!Number.isInteger(limit)||limit<0||limit>6)throw new RangeError('Invalid limit');
+ if(limit===0)return [];
+ const {prefix,previous}=parseContext(text);
+ const preferred=NEXT[previous]||INITIAL;
+ const ordering=[...preferred,...UNIQUE];
+ const out=[];
+ for(const item of ordering){
+   if(!item.startsWith(prefix)||item===prefix||out.includes(item))continue;
+   out.push(item);
+   if(out.length===limit)break;
+ }
+ return out;
+}
+function completeWord(text,suggestion,maxLength=300){
+ if(typeof text!=='string'||typeof suggestion!=='string'||!Number.isInteger(maxLength)||maxLength<1)throw new TypeError('Invalid completion input');
+ if(!UNIQUE.includes(suggestion))throw new RangeError('Unknown suggestion');
+ const end=text.match(/([A-Za-zÄÖÜäöüßẞ]+)$/u);
+ const prefix=end?end[1]:'';
+ if(prefix&&!suggestion.startsWith(prefix.toLocaleUpperCase('de-DE')))return {ok:false,text,reason:'prefix-mismatch'};
+ if(prefix.toLocaleUpperCase('de-DE')===suggestion)return {ok:false,text,reason:'already-complete'};
+ // Append one space after a consciously selected whole word.
+ const output=text.slice(0,text.length-prefix.length)+suggestion+' ';
+ if(Array.from(output).length>maxLength)return {ok:false,text,reason:'max-length'};
+ return {ok:true,text:output,reason:'inserted'};
+}
+root.MindSpeakSuggestionsV11={suggestWords,completeWord,parseContext};
+if(typeof module==='object'&&module.exports)module.exports={suggestWords,completeWord,parseContext};
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+</script>
+<script>
+/* MindSpeak research adapter: validated selection impulses, NOT raw EEG. */
+(function (root) {
+  'use strict';
+
+  class MindSpeakSignalBridge {
+    constructor({ minConfidence = 0.85, maxAgeMs = 500, refractoryMs = 1200 } = {}) {
+      if (!(minConfidence >= 0 && minConfidence <= 1) ||
+          !(maxAgeMs > 0) || !(refractoryMs >= 0)) {
+        throw new RangeError('Invalid signal gate configuration');
+      }
+      this.minConfidence = minConfidence;
+      this.maxAgeMs = maxAgeMs;
+      this.refractoryMs = refractoryMs;
+      this.lastAcceptedAt = -Infinity;
+    }
+
+    evaluate(signal, nowMs, scanActive) {
+      if (!scanActive) return { accepted: false, reason: 'scan-inactive' };
+      if (!Number.isFinite(nowMs) || !signal || signal.type !== 'select' ||
+          !Number.isFinite(signal.confidence) ||
+          signal.confidence < 0 || signal.confidence > 1 ||
+          !Number.isFinite(signal.timestampMs)) {
+        return { accepted: false, reason: 'invalid-signal' };
+      }
+      // Safety: only the manually generated test impulse is supported in v0.5.
+      // Real hardware requires an explicit, validated adapter and activation step.
+      if (signal.source !== 'simulated') {
+        return { accepted: false, reason: 'unsupported-source' };
+      }
+      if (signal.confidence < this.minConfidence) {
+        return { accepted: false, reason: 'low-confidence' };
+      }
+      const ageMs = nowMs - signal.timestampMs;
+      if (ageMs < 0 || ageMs > this.maxAgeMs) {
+        return { accepted: false, reason: 'stale-or-future' };
+      }
+      if (nowMs - this.lastAcceptedAt < this.refractoryMs) {
+        return { accepted: false, reason: 'refractory-period' };
+      }
+      this.lastAcceptedAt = nowMs;
+      return { accepted: true, reason: 'accepted' };
+    }
+  }
+
+  // Browser script and Node's built-in test runner share the same pure logic.
+  root.MindSpeakSignalBridge = MindSpeakSignalBridge;
+  if (typeof module === 'object' && module.exports) {
+    module.exports = { MindSpeakSignalBridge };
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(function(){
+'use strict';
+const GENERAL_PHRASES=[
+ ['✓','Ja'],['✕','Nein'],['!','Bitte helfen'],['◷','Ich brauche eine Pause'],
+ ['♡','Ich habe Schmerzen'],['▤','Ich brauche Wasser']
+];
+const CARE_PHRASES=[
+ ['✋','Stopp, bitte hör auf.'],
+ ['▣','Ich hatte Stuhlgang.'],
+ ['◧','Bitte wechsle meine Einlage.'],
+ ['◉','Ich brauche Hilfe bei der Intimpflege.'],
+ ['✦','Bitte wasch mich.'],
+ ['◷','Ich brauche eine Reinigung.'],
+ ['◈','Ich bin nass.'],
+ ['↻','Bitte hilf mir beim Umlagern.'],
+ ['▤','Ich muss zur Toilette.'],
+ ['♡','Meine Haut tut weh.'],
+ ['✥','Ich brauche frische Kleidung.'],
+ ['▣','Bitte wechsel mein Inkontinenzmaterial.'],
+ ['⚑','Bitte achte auf meine Privatsphäre.'],
+ ['✂','Bitte hilf mir bei der Rasur.'],
+ ['◉','Bitte rasiere mein Gesicht.'],
+ ['♡','Ich möchte vor der Rasur gefragt werden.'],
+ ['◉','Bitte frag mich, bevor du mich berührst.']
+];
+const PHRASES=[...GENERAL_PHRASES,...CARE_PHRASES];
+const DE_PHRASES=PHRASES.map(x=>x[1]);
+const LANGUAGE_PACKS=Object.freeze({"en":{"tag":"en-US","general":["Yes","No","Please help","I need a break","I am in pain","I need water"],"care":["Stop, please stop.","I have had a bowel movement.","Please change my incontinence pad.","I need help with intimate hygiene.","Please wash me.","I need help getting cleaned up.","My clothes are wet.","Please help me change position.","I need to use the toilet.","My skin hurts.","I need clean clothes.","Please change my incontinence product.","Please respect my privacy.","Please help me shave.","Please shave my face.","Please ask me before shaving me.","Please ask before touching me."],"words":["I","YOU","WE","THEY","HE","SHE","ME","MY","YOUR","OUR","THE","A","AN","AND","OR","BUT","ALSO","NOT","YES","NO","PLEASE","THANKS","THANK","HELLO","GOOD","MORNING","AFTERNOON","EVENING","NIGHT","WHAT","WHEN","WHY","WHERE","WHO","HOW","HERE","THERE","THIS","THAT","HAVE","HAS","HAD","NEED","NEEDS","WANT","WANTS","LIKE","CAN","COULD","WOULD","SHOULD","MUST","AM","ARE","IS","WAS","WERE","WILL","DO","DID","DOES","GO","GOING","COME","PLEASE","WITH","WITHOUT","FOR","FROM","TO","ON","IN","AT","INTO","OUT","UP","DOWN","UNDER","OVER","OF","NEAR","BEFORE","AFTER","NOW","LATER","TODAY","TOMORROW","YESTERDAY","VERY","MUCH","MORE","LESS","AGAIN","STILL","STOP","WAIT","SLOW","HELP","HELPING","NURSE","DOCTOR","CARE","PERSON","PAIN","HURTS","SKIN","WOUND","SORE","BLEEDING","BREATH","BREATHING","AIR","WATER","DRINK","EAT","FOOD","HUNGRY","THIRSTY","COLD","HOT","WARM","FEVER","SICK","TIRED","SLEEP","BED","CHAIR","WHEELCHAIR","PILLOW","BLANKET","TOILET","BATHROOM","WASH","CLEAN","CLEANING","SHOWER","HYGIENE","PRIVATE","PRIVACY","INTIMATE","BODY","HANDS","FACE","ARM","LEG","LEFT","RIGHT","SIDE","BACK","TURN","POSITION","REPOSITION","MOVE","MOVING","TOUCH","ASK","CONSENT","SHAVE","SHAVING","RAZOR","BEARD","HAIR","CLOTHES","UNDERWEAR","BEDDING","DRY","WET","CHANGE","CHANGING","PAD","INCONTINENCE","DIAPER","NAPPY","BOWEL","MOVEMENT","STOOL","URINE","PEE","NEED","MEDICINE","MEDICATION","TABLET","PILLS","WINDOW","DOOR","OPEN","CLOSE","LIGHT","SOUND","MUSIC","PHONE","CALL","FAMILY","FRIEND","HOME"],"next":{"I":["NEED","WANT","AM","HAVE","CAN"],"NEED":["HELP","WATER","TO","A","MY","THE"],"PLEASE":["HELP","STOP","CHANGE","WASH","ASK","GIVE"],"MY":["SKIN","CLOTHES","PAD","FACE","BACK"],"CHANGE":["MY","THE","POSITION"],"HAVE":["PAIN","HAD","A"],"TO":["THE","USE","GO","SHAVE"],"STOP":["PLEASE"],"HELP":["ME","WITH"]},"initial":["I","YES","NO","PLEASE","HELP","WATER"]},"es":{"tag":"es-ES","general":["Sí","No","Necesito ayuda, por favor","Necesito descansar","Tengo dolor","Necesito agua"],"care":["Para, por favor.","He hecho de vientre.","Por favor, cámbiame el absorbente.","Necesito ayuda con mi higiene íntima.","Por favor, lávame.","Necesito ayuda para asearme.","Mi ropa está mojada.","Ayúdame a cambiar de postura, por favor.","Necesito ir al baño.","Me duele la piel.","Necesito ropa limpia.","Por favor, cambia mi producto de incontinencia.","Por favor, respeta mi privacidad.","Necesito ayuda para afeitarme.","Por favor, aféitame la cara.","Pregúntame antes de afeitarme, por favor.","Pregúntame antes de tocarme, por favor."],"words":["YO","TÚ","USTED","NOSOTROS","EL","ELLA","MI","MIS","TU","TUS","SU","SUS","ME","TE","LA","EL","LOS","LAS","UN","UNA","UNOS","UNAS","Y","O","PERO","TAMBIÉN","NO","SÍ","POR","FAVOR","GRACIAS","HOLA","BUENOS","DÍAS","TARDES","NOCHES","QUÉ","CUÁNDO","DÓNDE","QUIÉN","CÓMO","PORQUÉ","AQUÍ","ALLÍ","ESTO","ESO","TENGO","TIENE","TENÍA","NECESITO","NECESITA","QUIERO","QUIERES","PUEDO","PUEDE","VAMOS","IR","VENIR","CON","SIN","PARA","DE","DEL","A","AL","EN","SOBRE","BAJO","ANTES","DESPUÉS","AHORA","LUEGO","HOY","MAÑANA","AYER","MUCHO","MÁS","MENOS","OTRA","VEZ","TODAVÍA","STOP","PARA","DETENTE","ESPERA","LENTO","AYUDA","AYUDAR","ENFERMERA","ENFERMERO","MÉDICO","DOCTOR","CUIDADOS","CUIDAR","DOLOR","DUELE","PIEL","HERIDA","MOLESTIA","SANGRE","RESPIRAR","AIRE","AGUA","BEBER","COMER","COMIDA","HAMBRE","SED","FRÍO","CALOR","ENFERMO","CANSANCIO","DORMIR","CAMA","SILLA","SILLA","DE","RUEDAS","ALMOHADA","MANTA","BAÑO","ASEO","LAVAR","LÁVAME","LIMPIAR","LIMPIEZA","DUCHA","HIGIENE","ÍNTIMA","CUERPO","MANOS","CARA","BRAZO","PIERNA","IZQUIERDA","DERECHA","LADO","ESPALDA","GIRAR","POSTURA","POSICIÓN","MOVER","TOCAR","PREGUNTAR","PERMISO","AFEITAR","AFEITARME","AFEITADO","AFEITADORA","BARBA","PELO","ROPA","ROPA","INTERIOR","SÁBANAS","SECO","MOJADA","MOJADO","CAMBIAR","CÁMBIAME","ABSORBENTE","INCONTINENCIA","PAÑAL","DEPOSICIÓN","INTESTINAL","HECES","ORINA","ORINAR","MEDICINA","MEDICAMENTO","PASTILLA","VENTANA","PUERTA","ABRIR","CERRAR","LUZ","SONIDO","MÚSICA","TELÉFONO","LLAMAR","FAMILIA","AMIGO","CASA","NECESITO"],"next":{"NECESITO":["AYUDA","AGUA","IR","QUE","UNA"],"POR":["FAVOR"],"MI":["ROPA","PIEL","CARA"],"TENGO":["DOLOR","SED","HAMBRE"],"ME":["DUELE","AYUDAS"],"POR FAVOR":["CAMBIA","LAVA"],"QUIERO":["AGUA","IR","DESCANSAR"],"IR":["AL"],"AL":["BAÑO"],"CAMBIA":["MI"],"AYUDA":["PARA"]},"initial":["YO","SÍ","NO","NECESITO","POR","AYUDA"]},"fr":{"tag":"fr-FR","general":["Oui","Non","Aidez-moi, s'il vous plaît","J'ai besoin d'une pause","J'ai mal","J'ai besoin d'eau"],"care":["Stop, arrêtez s'il vous plaît.","J'ai eu des selles.","Changez ma protection, s'il vous plaît.","J'ai besoin d'aide pour ma toilette intime.","Lavez-moi, s'il vous plaît.","J'ai besoin d'aide pour me nettoyer.","Mes vêtements sont mouillés.","Aidez-moi à changer de position.","J'ai besoin d'aller aux toilettes.","J'ai mal à la peau.","J'ai besoin de vêtements propres.","Changez ma protection pour l'incontinence, s'il vous plaît.","Respectez mon intimité, s'il vous plaît.","Aidez-moi à me raser, s'il vous plaît.","Rasez-moi le visage, s'il vous plaît.","Demandez-moi avant de me raser, s'il vous plaît.","Demandez-moi avant de me toucher, s'il vous plaît."],"words":["JE","TU","VOUS","NOUS","IL","ELLE","MOI","MON","MA","MES","TON","TA","TES","LE","LA","LES","UN","UNE","DES","ET","OU","MAIS","AUSSI","NE","PAS","NON","OUI","S","IL","VOUS","PLAÎT","MERCI","BONJOUR","BONSOIR","BONNE","NUIT","QUOI","QUAND","POURQUOI","OÙ","QUI","COMMENT","ICI","LÀ","CECI","CELA","AI","A","AVEZ","BESOIN","VEUX","VEUT","VOUDRAIS","PEUX","PEUT","POUVEZ","DEVEZ","DOIS","ALLER","VENIR","AVEC","SANS","POUR","DE","DU","AU","AUX","DANS","SUR","SOUS","AVANT","APRÈS","MAINTENANT","PLUS","TARD","AUJOURD","HUI","DEMAIN","HIER","BEAUCOUP","MOINS","ENCORE","ARRÊTEZ","STOP","ATTENDEZ","LENTEMENT","AIDE","AIDER","INFIRMIÈRE","INFIRMIER","MÉDECIN","SOINS","SOIGNANT","DOULEUR","MAL","PEAU","PLAIE","SAIGNEMENT","RESPIRER","AIR","EAU","BOIRE","MANGER","NOURRITURE","FAIM","SOIF","FROID","CHAUD","MALADE","FATIGUÉ","SOMMEIL","DORMIR","LIT","CHAISE","FAUTEUIL","ROULANT","OREILLER","COUVERTURE","TOILETTES","SALLE","BAIN","LAVER","NETTOYER","NETTOYAGE","DOUCHE","HYGIÈNE","INTIME","CORPS","MAINS","VISAGE","BRAS","JAMBE","GAUCHE","DROITE","CÔTÉ","DOS","TOURNER","POSITION","BOUGER","TOUCHER","DEMANDER","ACCORD","RASER","RASAGE","RASOIR","BARBE","CHEVEUX","VÊTEMENTS","SOUS-VÊTEMENTS","DRAPS","SEC","MOUILLÉS","CHANGER","PROTECTION","INCONTINENCE","COUCHE","SELLES","URINE","URINER","MÉDICAMENT","COMPRIMÉ","FENÊTRE","PORTE","OUVRIR","FERMER","LUMIÈRE","SON","MUSIQUE","TÉLÉPHONE","APPELER","FAMILLE","AMI","MAISON"],"next":{"JE":["VEUX","SUIS","DOIS"],"J":["AI"],"AI":["BESOIN","MAL"],"BESOIN":["D","AIDE","EAU"],"AIDEZ":["MOI"],"S":["IL"],"IL":["VOUS"],"VOUS":["PLAÎT"],"MA":["PROTECTION","PEAU"],"CHANGER":["MA","DE"],"AU":["LIT"],"AUX":["TOILETTES"]},"initial":["JE","OUI","NON","AIDE","J","MERCI"]},"tr":{"tag":"tr-TR","general":["Evet","Hayır","Lütfen yardım edin.","Biraz dinlenmem gerekiyor.","Ağrım var.","Suya ihtiyacım var."],"care":["Lütfen durun.","Büyük tuvaletimi yaptım.","Lütfen alt bezimi değiştirin.","Özel bölgemin temizliği için yardıma ihtiyacım var.","Lütfen beni yıkayın.","Temizlenmek için yardıma ihtiyacım var.","Üstüm ıslak.","Lütfen pozisyonumu değiştirmeme yardım edin.","Tuvalete gitmem gerekiyor.","Cildim acıyor.","Temiz kıyafetlere ihtiyacım var.","Lütfen idrar kaçırma pedimi değiştirin.","Lütfen mahremiyetime saygı gösterin.","Lütfen tıraş olmama yardım edin.","Lütfen yüzümü tıraş edin.","Lütfen tıraştan önce bana sorun.","Lütfen bana dokunmadan önce izin isteyin."],"words":["BEN","SEN","O","BİZ","SİZ","ONLAR","EVET","HAYIR","LÜTFEN","TEŞEKKÜR","MERHABA","GÜNAYDIN","İYİ","AKŞAMLAR","GECE","YARDIM","YARDIMCI","OLUN","İSTİYORUM","İSTEMİYORUM","İHTİYACIM","VAR","LAZIM","BENİ","BANA","BENİM","SENİN","ONUN","VE","VEYA","AMA","DEĞİL","DAHA","AZ","ÇOK","BİRAZ","ÖNCE","SONRA","ŞİMDİ","BUGÜN","YARIN","DÜN","EVDE","HASTANE","ODA","YATAK","SANDALYE","TEKERLEKLİ","YASTIK","BATTANİYE","SU","İÇMEK","İÇECEK","YEMEK","AÇ","SUSADIM","AĞRI","AĞRIM","ACİL","CANIM","CİLDİM","CİLT","YARA","ATEŞ","ÜŞÜYORUM","SICAK","SOĞUK","YORGUNUM","UYUMAK","İLAÇ","İLAÇLAR","DOKTOR","HEMŞİRE","BAKIM","AĞIZ","NEFES","ALMAK","SOLUK","HAVA","PENCERE","KAPI","KAPAT","TUVALET","BANYO","TEMİZ","TEMİZLİK","TEMİZLENMEK","YIKAMAK","YIKAYIN","YÜZÜM","ELLERİM","KOLUM","BACAĞIM","SIRTIM","SOL","SAĞ","POZİSYON","DEĞİŞTİR","EDİN","DOKUNMA","DOKUNMADAN","SORUN","İZİN","MAHREMİYET","MAHREMİYETIME","SAYGI","TIRAŞ","TIRAŞTAN","OLMAK","YÜZÜMÜ","KIYAFET","ÜSTÜM","ISLAK","KURU","BEZ","BEZİMİ","PED","PEDİMİ","İDRAR","DIŞKI","BÜYÜK","KÜÇÜK","DIŞKILADIM","TUVALETİMİ","YAPTIM","HEMEN","DURUN","BEKLEYİN","TEKRAR","DİNLENMEM","GEREKİYOR","DEĞİŞTİRİN","GETİRİN","İSTEYİN","SORAR","MISINIZ","HAZIR","EĞER","OLUR","MU","NASIL","NEREDE","NE","ZAMAN","NEDEN","KİM","GÜZEL","TAMAM","ACIYOR","EV","İLETİŞİM","TELEFON","AİLE","ARKADAŞ"],"next":{"BEN":["SU","YARDIM","İSTİYORUM","İHTİYACIM"],"LÜTFEN":["YARDIM","DURUN","BENİ","TUVALET"],"SUYA":["İHTİYACIM"],"TUVALETE":["GİTMEM"],"YARDIM":["EDİN","İSTİYORUM"],"BİRAZ":["DİNLENMEM"],"AĞRIM":["VAR"]},"initial":["BEN","EVET","HAYIR","LÜTFEN","YARDIM","SU"]},"ar":{"tag":"ar-SA","general":["نعم","لا","أحتاج إلى المساعدة، من فضلك.","أحتاج إلى استراحة.","أشعر بالألم.","أحتاج إلى الماء."],"care":["توقف، من فضلك.","لقد تبرزت.","من فضلك غيّر حفاضتي.","أحتاج إلى المساعدة في تنظيف المنطقة الحساسة.","من فضلك اغسلني.","أحتاج إلى المساعدة في التنظيف.","ملابسي مبللة.","ساعدني على تغيير وضعيتي، من فضلك.","أحتاج إلى الذهاب إلى الحمام.","جلدي يؤلمني.","أحتاج إلى ملابس نظيفة.","من فضلك غيّر مستلزمات سلس البول.","من فضلك احترم خصوصيتي.","أحتاج إلى المساعدة في الحلاقة.","من فضلك احلق وجهي.","من فضلك اسألني قبل أن تحلق لي.","من فضلك استأذن قبل أن تلمسني."],"words":["أنا","أنت","هو","هي","نحن","أنتم","نعم","لا","من","فضلك","شكرا","مرحبا","صباح","مساء","ليل","أحتاج","إلى","أريد","أستطيع","ساعدني","مساعدتي","مساعدة","ساعد","توقف","توقفوا","انتظر","الآن","بعد","قبل","غدا","اليوم","أمس","هنا","هناك","هذا","هذه","ذلك","مع","بدون","في","على","تحت","فوق","عند","عن","لماذا","أين","متى","كيف","ماذا","كم","أكثر","أقل","قليلا","كثيرا","الماء","مياه","أشرب","شرب","طعام","أكل","جائع","جائعة","عطشان","عطشى","ألم","يؤلمني","الألم","وجع","أشعر","مريض","مريضة","طبيب","طبيبة","ممرضة","ممرض","دواء","أدوية","حبوب","سرير","كرسي","متحرك","وسادة","بطانية","غرفة","منزل","مستشفى","نافذة","باب","افتح","أغلق","نور","هواء","تنفس","أتنفس","بارد","ساخن","حرارة","متعب","متعبة","نوم","نومي","استراحة","راحة","حمام","مرحاض","دورة","نظافة","تنظيف","اغسلني","اغسل","غسل","جسمي","جسم","وجه","وجهي","يد","يدي","ساق","ظهري","بشرتي","جلد","جلدي","جرح","مبللة","مبلل","جاف","ملابس","نظيفة","ثيابي","غيّر","غيّري","تغيير","حفاضة","حفاضتي","حفاضات","فوط","سلس","البول","تبرزت","براز","تبول","بول","وضعيتي","وضعية","وضع","لمس","تلمسني","تلمس","استأذن","اسألني","إذن","موافقة","خصوصيتي","احترم","حلاقة","احلق","شعر","لحيتي","منطقة","حساسة","المناطق","الحساسة","اطلب","أحضر","أسرع","ببطء","اتصل","هاتف","عائلتي","صديق","صديقة"],"next":{"أنا":["أريد","أحتاج"],"أحتاج":["إلى","مساعدة"],"من":["فضلك"],"إلى":["الماء","الحمام","المساعدة"],"أريد":["الماء","مساعدة"],"ساعدني":["على"],"من فضلك":["ساعدني"]},"initial":["أنا","نعم","لا","أحتاج","من","ساعدني"]}});
+let activeLanguage='de';
+const WORD_CHARS=/([\p{L}]+)$/u;
+function localizedSuggestions(text,limit=6){
+ if(activeLanguage==='de')return window.MindSpeakSuggestionsV11.suggestWords(text,limit);
+ if(typeof text!=='string')throw new TypeError('Text required');
+ if(!Number.isInteger(limit)||limit<0||limit>6)throw new RangeError('Invalid limit');
+ if(limit===0)return [];
+ const pack=LANGUAGE_PACKS[activeLanguage],match=text.match(WORD_CHARS);
+ const prefix=match?match[1].toLocaleUpperCase(pack.tag):'';
+ const before=match?text.slice(0,-match[1].length):text;
+ const tokens=before.match(/[\p{L}]+/gu)||[];
+ const previous=tokens.length?tokens[tokens.length-1].toLocaleUpperCase(pack.tag):'';
+ const preferred=pack.next[previous]||pack.initial;
+ const out=[];
+ for(const word of [...preferred,...pack.words]){
+  // A prediction must be in the active dictionary; otherwise confirming it
+  // would fail completion (some context examples may be absent in a pack).
+  if(!pack.words.includes(word)||!word.startsWith(prefix)||word===prefix||out.includes(word))continue;
+  out.push(word);if(out.length>=limit)break;
+ }
+ return out;
+}
+function localizedCompletion(text,suggestion,maxLength=300){
+ if(activeLanguage==='de')return window.MindSpeakSuggestionsV11.completeWord(text,suggestion,maxLength);
+ const pack=LANGUAGE_PACKS[activeLanguage];
+ if(typeof text!=='string'||typeof suggestion!=='string'||!Number.isInteger(maxLength)||maxLength<1)throw new TypeError('Invalid completion input');
+ if(!pack.words.includes(suggestion))throw new RangeError('Unknown word in active language');
+ const match=text.match(WORD_CHARS),prefix=match?match[1]:'';
+ if(prefix&&!suggestion.startsWith(prefix.toLocaleUpperCase(pack.tag)))return {ok:false,text,reason:'prefix-mismatch'};
+ if(prefix.toLocaleUpperCase(pack.tag)===suggestion)return {ok:false,text,reason:'already-complete'};
+ const output=text.slice(0,text.length-prefix.length)+suggestion+' ';
+ return Array.from(output).length>maxLength?{ok:false,text,reason:'max-length'}:{ok:true,text:output,reason:'inserted'};
+}
+const LANG_UI={
+ de:{modeTitle:'Wie möchtest du kommunizieren?',quick:'⚡ Schnellauswahl',write:'✍ Freies Schreiben',quickTitle:'Schnelle Aussagen',careTitle:'Pflege und Körperpflege',writeTitle:'Eigenen Satz schreiben',careBtn:'🕹️ Direkt zu den Pflege-Sätzen',careScan:'♿ Pflege-Scan starten (ein Taster)',writeJoy:'🕹️ Mit Joystick schreiben',status:'Deutsch aktiv. Wortvorschläge und Pflegeaussagen auf Deutsch.',locked:'Bitte beende oder lösche zunächst den angefangenen Satz. Kein Sprachwechsel durchgeführt.'},
+ en:{modeTitle:'How would you like to communicate?',quick:'⚡ Quick phrases',write:'✍ Write a message',quickTitle:'Quick phrases',careTitle:'Care and personal hygiene',writeTitle:'Write your own message',careBtn:'🕹️ Go to care phrases',careScan:'♿ Start care scan (one switch)',writeJoy:'🕹️ Write with joystick',status:'English active. Predictions and care phrases are in English.',locked:'Please finish or delete the current draft before changing language.'},
+ es:{modeTitle:'¿Cómo quieres comunicarte?',quick:'⚡ Frases rápidas',write:'✍ Escribir mensaje',quickTitle:'Frases rápidas',careTitle:'Cuidados e higiene personal',writeTitle:'Escribe tu mensaje',careBtn:'🕹️ Ir a frases de cuidados',careScan:'♿ Iniciar barrido de cuidados (un pulsador)',writeJoy:'🕹️ Escribir con joystick',status:'Español activo. Frases y sugerencias en español.',locked:'Termina o borra el mensaje antes de cambiar de idioma.'},
+ fr:{modeTitle:'Comment souhaitez-vous communiquer ?',quick:'⚡ Phrases rapides',write:'✍ Écrire un message',quickTitle:'Phrases rapides',careTitle:'Soins et hygiène personnelle',writeTitle:'Écrire votre message',careBtn:'🕹️ Accéder aux phrases de soins',careScan:'♿ Lancer le balayage des soins (un contacteur)',writeJoy:'🕹️ Écrire au joystick',status:'Français actif. Phrases et suggestions en français.',locked:'Terminez ou effacez le message avant de changer de langue.'}
+,
+ tr:{"modeTitle":"Nasıl iletişim kurmak istersiniz?","quick":"⚡ Hazır ifadeler","write":"✍ Mesaj yaz","quickTitle":"Hazır ifadeler","careTitle":"Bakım ve kişisel temizlik","writeTitle":"Kendi mesajınızı yazın","careBtn":"🕹️ Bakım ifadelerine git","careScan":"♿ Bakım taramasını başlat (tek düğme)","writeJoy":"🕹️ Joystick ile yaz","status":"Türkçe etkin. Bakım ifadeleri ve kelime önerileri Türkçe.","locked":"Dil değiştirmeden önce yazdığınız mesajı bitirin veya silin."},
+ ar:{"modeTitle":"كيف تريد التواصل؟","quick":"⚡ عبارات سريعة","write":"✍ كتابة رسالة","quickTitle":"عبارات سريعة","careTitle":"الرعاية والنظافة الشخصية","writeTitle":"اكتب رسالتك","careBtn":"🕹️ الانتقال إلى عبارات الرعاية","careScan":"♿ بدء مسح عبارات الرعاية (زر واحد)","writeJoy":"🕹️ الكتابة بعصا التحكم","status":"اللغة العربية مفعّلة. العبارات واقتراحات الكلمات بالعربية.","locked":"يرجى إكمال الرسالة الحالية أو حذفها قبل تغيير اللغة."}
+};
+const suggestWords=localizedSuggestions,completeWord=localizedCompletion;
+const FULL_KEY_LAYOUTS={
+ tr:[['A','B','C','Ç','D','E'],['F','G','Ğ','H','I','İ'],['J','K','L','M','N','O'],['Ö','P','R','S','Ş','T'],['U','Ü','V','Y','Z','?']],
+ ar:[['ا','ب','ت','ث','ج','ح'],['خ','د','ذ','ر','ز','س'],['ش','ص','ض','ط','ظ','ع'],['غ','ف','ق','ك','ل','م'],['ن','ه','و','ي','ة','أ']]
+};
+const SPECIAL_KEY_ROW={
+ de:['Y','Z','Ä','Ö','Ü','ß'],
+ en:['Y','Z',',','!',"'",'-'],
+ es:['Y','Z','Ñ','Á','É','Í'],
+ fr:['Y','Z','É','È','À','Ç']
+};
+function localizedKeyboardRows(){
+ return FULL_KEY_LAYOUTS[activeLanguage]
+ ? [...FULL_KEY_LAYOUTS[activeLanguage],ROWS[5]]
+ : ROWS.map((r,i)=>i===4?SPECIAL_KEY_ROW[activeLanguage]:r);
+}
+const {ROWS,HybridComposer,RowColumnScan}=window.MindSpeakHybridInput;
+const composer=new HybridComposer(300);
+let keyboardScan=new RowColumnScan();
+// Language-aware completion functions are defined above; German uses the original validated implementation.
+const $=id=>document.getElementById(id);
+const suggestionWrap=$('suggestion-wrap'),suggestionRow=$('suggestion-row'),wordScanToggle=$('word-scan-toggle'),letterScanToggle=$('letter-scan-toggle'),controlRow=$('control-row'),undoDraft=$('undo-draft');
+const suggestionButtons=[];let activeSuggestions=[];let suggestionRowPresent=false;
+const bridge=new window.MindSpeakSignalBridge();
+const inputMethod=$('input-method'),joystickDemo=$('joystick-demo'),joystickCurrent=$('joystick-current'),joyUp=$('joy-up'),joyDown=$('joy-down');
+let inputMode='switch',navRow=0,navCol=0;
+const autoSuggestionFocus=$('auto-suggest-focus');
+let autoSuggestEnabled=true,joystickConfirming=false,joystickTarget=null,savedLetterTarget=null;
+autoSuggestionFocus.checked=true;
+autoSuggestionFocus.addEventListener('change',()=>{
+ autoSuggestEnabled=Boolean(autoSuggestionFocus.checked);
+ savedLetterTarget=null;
+});
+const quickView=$('quick-view'),writeView=$('write-view'),quickButton=$('mode-quick'),writeButton=$('mode-write');
+const keyboard=$('keyboard'),phrases=$('phrases'),draft=$('draft'),draftCount=$('draft-count'),draftStatus=$('draft-status');
+const scanToggle=$('scan-toggle'),scanChoose=$('scan-choose'),scanSpeed=$('scan-speed'),scanRounds=$('scan-rounds');
+const scanHud=$('scan-hud'),scanCurrent=$('scan-current'),scanPhase=$('scan-phase'),status=$('live-status');
+const lastMessage=$('last-message'),repeat=$('repeat'),speechToggle=$('speech-toggle');
+const mockResult=$('mock-result'),clearDraft=$('clear-draft'),speakDraft=$('speak-draft'),autoContinue=$('auto-continue');
+let mode='quick',timer=null,scanIndex=0,cycles=0,clearArmed=false,last='',speechEnabled=true,autoContinueEnabled=true,scanKind='keyboard',letterOnlyMode=false,careOnlyScan=false;
+class OneSwitchKeyGate{
+ constructor(lockoutMs=650){this.lockoutMs=lockoutMs;this.down=false;this.lastAt=-Infinity;}
+ press(nowMs){
+  if(this.down)return {accepted:false,reason:'gehalten'};
+  this.down=true;
+  if(nowMs-this.lastAt<this.lockoutMs)return {accepted:false,reason:'Abstand unter 650 ms'};
+  this.lastAt=nowMs;return {accepted:true,reason:'ok'};
+ }
+ release(){this.down=false;}
+ reset(){this.down=false;this.lastAt=-Infinity;}
+}
+window.MindSpeakOneSwitchKeyGate=OneSwitchKeyGate;
+const externalSwitchKey=$('external-switch-key'),externalSwitchToggle=$('external-switch-enable'),externalSwitchStatus=$('external-switch-status');
+const keyGate=new OneSwitchKeyGate(650);let externalSwitchEnabled=false;let switchAcceptCount=0;
+if(!externalSwitchKey.value)externalSwitchKey.value='Space';
+externalSwitchToggle.setAttribute('aria-pressed','false');
+function disableExternalSwitch(message){
+ externalSwitchEnabled=false;keyGate.reset();externalSwitchToggle.setAttribute('aria-pressed','false');
+ externalSwitchToggle.textContent=localizedMessage('Tastereingabe aktivieren');
+ externalSwitchStatus.textContent=localizedMessage(message||'Tastereingabe deaktiviert.');
+}
+function updateSwitchStatus(message){externalSwitchStatus.textContent=localizedMessage(message);}
+externalSwitchToggle.addEventListener('click',()=>{
+ if(externalSwitchEnabled){disableExternalSwitch('Tastereingabe manuell deaktiviert.');return;}
+ if(inputMode!=='switch')chooseInputMethod('switch');
+ keyGate.reset();externalSwitchEnabled=true;switchAcceptCount=0;
+ externalSwitchToggle.setAttribute('aria-pressed','true');
+ externalSwitchToggle.textContent=localizedMessage('Tastereingabe deaktivieren');
+ updateSwitchStatus('Tastereingabe aktiv. '+(externalSwitchKey.value==='Space'?'Leertaste':'Enter')+' ist zugewiesen. Erster Tastendruck startet den Scan, weitere wählen das markierte Feld.');
+});
+externalSwitchKey.addEventListener('change',()=>{
+ keyGate.reset();if(externalSwitchEnabled)updateSwitchStatus('Taster neu eingestellt: '+(externalSwitchKey.value==='Space'?'Leertaste':'Enter')+'. Nächster Tastendruck startet oder bestätigt den Scan.');
+});
+const phraseButtons=[],keyboardButtons=[],controlButtons=[];const editHistory=[];const MAX_UNDO=30;
+PHRASES.forEach(([symbol,words],i)=>{
+  const button=document.createElement('button');
+  button.type='button';button.className='phrase';button.dataset.active='false';
+  const s=document.createElement('span');s.className='symbol';s.setAttribute('aria-hidden','true');s.textContent=symbol;
+  const t=document.createElement('span');t.textContent=words;
+  button.append(s,t);button.setAttribute('aria-label',words+' auswählen');
+  button.addEventListener('click',()=>{if(timer!==null)stopScan();deliver(PHRASES[i][1]);});
+  (i<GENERAL_PHRASES.length?phrases:$('care-phrases')).appendChild(button);
+  phraseButtons.push(button);
+});
+ROWS.forEach((keys,rowIndex)=>{
+  const group=document.createElement('div');
+  group.className='keyboard-row';group.dataset.active='false';
+  group.setAttribute('role','group');group.setAttribute('aria-label','Reihe '+(rowIndex+1));
+  const buttons=[];
+  keys.forEach(key=>{
+    const button=document.createElement('button');button.type='button';
+    button.className='key'+(key.length>1?' special':'');
+    button.dataset.active='false';
+    button.textContent=key===' '?'␣':key;
+    button.setAttribute('aria-label',key===' '?'Leerzeichen':key==='⌫'?'Letztes Zeichen entfernen':key);
+    button.addEventListener('click',()=>{const actual=button.dataset.languageKey||key;if(letterOnlyMode&&key==='Zurück'){setLetterMode(false,'Wortvorschläge wieder sichtbar.');return;}if(timer!==null)stopScan();handleKey(actual);});
+    group.appendChild(button);buttons.push(button);
+  });
+  keyboard.appendChild(group);keyboardButtons.push({group,buttons});
+});
+for(let i=0;i<6;i++){
+  const btn=document.createElement('button');
+  btn.type='button';btn.className='key special';btn.dataset.active='false';
+  btn.setAttribute('aria-label','Noch kein Wortvorschlag');btn.disabled=true;
+  btn.addEventListener('click',()=>{
+    if(btn.disabled)return;
+    if(timer!==null&&mode==='write'&&scanKind==='keyboard'&&!letterOnlyMode&&suggestionRowPresent&&i===0){
+      setLetterMode(true,'ABC-Scan gewählt');
+      return;
+    }
+    const word=(timer!==null&&scanKind==='keyboard'&&!letterOnlyMode&&suggestionRowPresent)?activeSuggestions[i-1]:activeSuggestions[i];
+    if(!word)return;
+    if(timer!==null)stopScan('Direkte Wortauswahl.');
+    insertSuggestedWord(word);
+  });
+  suggestionRow.appendChild(btn);suggestionButtons.push(btn);
+}
+const ACTIONS=['↶ Rückgängig','⌫','Nur ABC','Wörter an','Zurück','Scan stoppen'];
+ACTIONS.forEach((name,i)=>{
+ const button=document.createElement('button');button.type='button';button.className='key special';
+ button.textContent=name;button.dataset.active='false';button.setAttribute('aria-label',name);
+ button.addEventListener('click',()=>{
+   if(name==='↶ Rückgängig'){undoLast();return;}
+   if(name==='⌫'){handleKey('⌫');return;}
+   if(name==='Nur ABC'){setLetterMode(true,'Nur Buchstabenreihen aktiv.');return;}
+   if(name==='Wörter an'){setLetterMode(false,'Vorschlagsreihe wieder aktiv.');return;}
+   if(name==='Scan stoppen'){stopScan('Manuell gestoppt.');return;}
+   status.textContent=localizedMessage('Zurück zur Reihenauswahl.');
+   keyboardScan.reset();render();
+ });
+ controlRow.appendChild(button);controlButtons.push(button);
+});
+function rememberEdit(previousText){
+ if(composer.text===previousText)return;
+ editHistory.push(previousText);
+ if(editHistory.length>MAX_UNDO)editHistory.shift();
+ undoDraft.disabled=false;
+}
+function undoLast(){
+ if(!editHistory.length){draftStatus.textContent=localizedMessage('Keine Eingabe zum Rückgängigmachen.');return false;}
+ const previous=editHistory.pop();
+ composer.setText(previous);displayDraft();
+ undoDraft.disabled=editHistory.length===0;
+ draftStatus.textContent=localizedMessage('Letzte Eingabe rückgängig gemacht. Keine Sprachausgabe.');
+ if(timer!==null){cycles=0;clearInterval(timer);startTimer();render();}
+ return true;
+}
+function navRows(){
+ if(mode==='quick'){
+  const rows=[];
+  for(let i=0;i<phraseButtons.length;i+=2)rows.push(phraseButtons.slice(i,i+2));
+  return rows;
+ }
+ const rows=[];
+ if(!letterOnlyMode&&suggestionRowPresent)rows.push(suggestionButtons);
+ for(const row of keyboardButtons)rows.push(row.buttons);
+ rows.push(controlButtons);
+ return rows;
+}
+function navValid(b){return Boolean(b&&!b.disabled);}
+function navNearest(row,col){
+ if(navValid(row[col]))return col;
+ let best=-1,delta=Infinity;
+ row.forEach((b,i)=>{if(navValid(b)&&Math.abs(i-col)<delta){best=i;delta=Math.abs(i-col);}});
+ return best;
+}
+function normalizeNav(){
+ const rows=navRows();
+ navRow=Math.min(Math.max(navRow,0),rows.length-1);
+ navCol=navNearest(rows[navRow],Math.min(Math.max(navCol,0),rows[navRow].length-1));
+ if(navCol<0){const i=rows.findIndex(row=>row.some(navValid));if(i>=0){navRow=i;navCol=navNearest(rows[i],0);}}
+}
+function paintNav(followSelection=false){
+ [...phraseButtons,...suggestionButtons,...keyboardButtons.flatMap(r=>r.buttons),...controlButtons].forEach(b=>b.dataset.navActive='false');
+ joystickDemo.hidden=inputMode!=='joystick';
+ // Context cues only, no extra button or automatic input.
+ joyDown.dataset.letterReturn='false';
+ joyDown.textContent='↓';
+ joyDown.setAttribute('aria-label','Runter');
+ joyUp.dataset.shortcut='false';
+ joyUp.textContent='↑';
+ joyUp.setAttribute('aria-label','Hoch');
+ if(inputMode!=='joystick')return;
+ normalizeNav();
+ const rows=navRows(),target=rows[navRow]?.[navCol];
+ if(!navValid(target)){joystickCurrent.textContent=localizedMessage('Keine Taste wählbar.');return;}
+ target.dataset.navActive='true';
+ // Advertise a return only when the stored key still belongs to the keyboard.
+ const returnLetter=mode==='write'&&navRow===0&&savedLetterTarget&&
+   rows.slice(1).some(row=>row.includes(savedLetterTarget))&&navValid(savedLetterTarget);
+ if(returnLetter){
+  const label=savedLetterTarget.textContent||'Buchstabe';
+  joyDown.dataset.letterReturn='true';
+  joyDown.textContent='↓ '+label;
+  joyDown.setAttribute('aria-label','Runter zurück zu '+label);
+ }
+ // Show the shortcut ONLY when a single Up would really focus Undo.
+ // An empty undo history, another selected column or the Quick mode must not
+ // advertise a shortcut that is currently unavailable.
+ const lastRow=rows[rows.length-1];
+ const undoUp=mode==='write'&&navRow===0&&navCol===0&&
+   lastRow?.[0]===controlButtons[0]&&navValid(controlButtons[0]);
+ if(undoUp){
+  joyUp.dataset.shortcut='true';
+  joyUp.textContent='↑ ↶';
+  joyUp.setAttribute('aria-label','Hoch zu Rückgängig – dann OK bestätigen');
+ }
+ // Keep the selected field visible above the floating directional pad.
+ // Never auto-activate or focus it; only explicit OK performs the action.
+ if(followSelection&&typeof target.scrollIntoView==='function'){
+  target.scrollIntoView({behavior:'auto',block:'center',inline:'nearest'});
+ }
+ joystickCurrent.textContent=localizedMessage('Markiert: '+(target.getAttribute('aria-label')||target.textContent||'Feld')+
+   ' · Reihe '+(navRow+1)+' · Feld '+(navCol+1)+(undoUp?' · ↑ zu ↶':'')+
+   (returnLetter?' · ↓ zurück zu '+(savedLetterTarget.textContent||'Buchstabe'):''));
+}
+function joystick(action){
+ if(inputMode!=='joystick')return;
+ normalizeNav();
+ const rows=navRows();
+ if(action==='ok'){
+  const target=rows[navRow]?.[navCol];
+  if(navValid(target)){
+   joystickConfirming=true;joystickTarget=target;
+   try{target.click();}finally{joystickConfirming=false;joystickTarget=null;}
+  }
+  paintNav(true);return;
+ }
+ // After auto-focusing a suggestion, one Down returns directly to the exact
+ // previously selected letter rather than jumping to the A-F row.
+ if(action==='down'&&navRow===0&&savedLetterTarget){
+  const previous=savedLetterTarget;savedLetterTarget=null;
+  for(let i=1;i<rows.length;i++){
+   const col=rows[i].indexOf(previous);
+   if(col>=0&&navValid(previous)){
+    navRow=i;navCol=col;paintNav(true);return;
+   }
+  }
+ }
+ // Horizontal browsing of suggestions must retain the original letter key.
+ // Otherwise ↓ lands in the same suggestion column (e.g. D instead of B).
+ if(!(mode==='write'&&navRow===0&&
+      (action==='left'||action==='right')&&savedLetterTarget)){
+  savedLetterTarget=null;
+ }
+ if(action==='left'||action==='right'){
+  const step=action==='left'?-1:1;
+  // Wrap around instead of stopping at a row edge; skip disabled keys.
+  const width=rows[navRow].length;
+  for(let delta=1;delta<=width;delta++){
+   const col=(navCol+step*delta%width+width)%width;
+   if(navValid(rows[navRow][col])){navCol=col;break;}
+  }
+ }else if(action==='up'||action==='down'){
+  const step=action==='up'?-1:1;
+  // One up from the first suggestion row reaches the correction/actions row.
+  const height=rows.length;
+  for(let delta=1;delta<=height;delta++){
+   const row=(navRow+step*delta%height+height)%height;
+   const col=navNearest(rows[row],navCol);
+   if(col>=0){navRow=row;navCol=col;break;}
+  }
+ }
+ paintNav(true);
+}
+function chooseInputMethod(value){
+ if(!['switch','joystick','touch'].includes(value))return;
+ if(timer!==null)stopScan('Eingabeweg gewechselt; Scan gestoppt.');
+ if(value!=='switch'&&externalSwitchEnabled)disableExternalSwitch('Tastereingabe wegen Moduswechsel deaktiviert.');
+ inputMode=value;navRow=0;navCol=0;savedLetterTarget=null;
+ inputMethod.value=value;document.body.classList.toggle('joystick-active',value==='joystick');paintNav(true);
+ status.textContent=localizedMessage(value==='joystick'?'Joystick-Simulation: Pfeile bewegen, OK wählen. Kein EEG.'
+ :value==='switch'?'Ein-Tasten-Scan bereit.':'Touchbedienung bereit.');
+}
+function actionMatrix(){
+ return ACTIONS;
+}
+function visibleWordLabels(){
+  if(timer!==null&&mode==='write'&&scanKind==='keyboard'&&!letterOnlyMode&&suggestionRowPresent){
+    const keys=['ABC →',...activeSuggestions.slice(0,5)];
+    return [...keys,...Array(6-keys.length).fill('–')];
+  }
+  return [...activeSuggestions,...Array(6-activeSuggestions.length).fill('–')];
+}
+function paintSuggestionButtons(){
+  const labels=visibleWordLabels();
+  suggestionButtons.forEach((btn,i)=>{
+    const key=labels[i];
+    const isShortcut=key==='ABC →';
+    btn.disabled=key==='–';
+    btn.textContent=key;
+    btn.setAttribute('aria-label',isShortcut?localizedMessage('Nur Buchstabenreihen aktiv.'):key==='–'?localizedMessage('Kein Vorschlag'):I18N_ARIA[activeLanguage].selected+key);
+  });
+}
+function paintMode(){
+  letterScanToggle.setAttribute('aria-pressed',String(letterOnlyMode));
+  letterScanToggle.textContent=localizedMessage(letterOnlyMode?'Wortvorschläge wieder einschalten':'Direkt Buchstaben scannen');
+  keyboardButtons[5].buttons[5].textContent=localizedMessage(letterOnlyMode?'Wörter an':'Zurück');
+  keyboardButtons[5].buttons[5].setAttribute('aria-label',localizedMessage(letterOnlyMode?'Wortvorschläge wieder einschalten':'Zurück zur Reihenauswahl.'));
+}
+function refreshSuggestions(){
+  activeSuggestions=suggestWords(composer.text);
+  suggestionRowPresent=activeSuggestions.length>0;
+  // Predictions remain tappable; in the one-button letter scan they are deliberately skipped.
+  suggestionWrap.hidden=!suggestionRowPresent;
+  wordScanToggle.disabled=!suggestionRowPresent;
+  const localRows=localizedKeyboardRows();
+  const scanRows=letterOnlyMode||!suggestionRowPresent
+   ? [...localRows.map((r,i)=>i===5&&letterOnlyMode?[...r.slice(0,5),'Wörter an']:r),actionMatrix()]
+   : [['ABC →',...activeSuggestions.slice(0,5),...Array(Math.max(0,5-activeSuggestions.length)).fill('–')],...localRows,actionMatrix()];
+  keyboardScan=new RowColumnScan(scanRows);
+  paintMode();
+  paintSuggestionButtons();
+  controlButtons.forEach((b,i)=>{b.disabled=i===0&&editHistory.length===0;});
+  paintNav();
+}
+function setLetterMode(on,message){
+  letterOnlyMode=Boolean(on);
+  scanKind='keyboard';scanIndex=0;cycles=0;
+  refreshSuggestions();
+  if(timer!==null){
+    clearInterval(timer);startTimer();
+    scanHud.hidden=false;
+  }
+  render();paintNav();
+  status.textContent=localizedMessage(message|| (letterOnlyMode?'Nur Buchstabenreihen aktiv.':'Wortvorschläge im Reihenscan wieder aktiv.'));
+}
+function insertSuggestedWord(word){
+  if(!activeSuggestions.includes(word))return false;
+  const answer=completeWord(composer.text,word,composer.maxLength);
+  if(!answer.ok){
+    draftStatus.textContent=localizedMessage(answer.reason==='max-length'
+      ? 'Für das Wort ist kein Platz mehr (maximal 300 Zeichen).'
+      : 'Vorschlag nicht mehr passend. Bitte erneut auswählen.');
+    return false;
+  }
+  const selectedByJoystick=joystickConfirming&&suggestionButtons.includes(joystickTarget);
+  const previous=composer.text;composer.setText(answer.text);rememberEdit(previous);savedLetterTarget=null;displayDraft();
+  // Completing a word starts navigation at the first next-word suggestion,
+  // never at an old suggestion column (which made ↓ land on D).
+  if(selectedByJoystick){navRow=0;navCol=0;paintNav(true);}
+  draftStatus.textContent=localizedMessage('Wort '+word+' eingefügt – noch nichts gesprochen.');
+  return true;
+}
+function displayDraft(){
+  draft.value=composer.text;draftCount.textContent=Array.from(composer.text).length+({
+ de:' / 300 Zeichen · Nur für diese Sitzung',
+ en:' / 300 characters · This session only',
+ es:' / 300 caracteres · Solo esta sesión',
+ fr:' / 300 caractères · Cette session seulement'
+})[activeLanguage];
+  undoDraft.disabled=editHistory.length===0;
+  speakDraft.disabled=!composer.text.trim();clearArmed=false;clearDraft.textContent=localizedMessage('Satz löschen');
+  refreshSuggestions();
+}
+function handleKey(key){
+  // A direct touch or non-joystick edit invalidates the return anchor.
+  if(!joystickConfirming)savedLetterTarget=null;
+  const previous=composer.text;
+  const result=composer.apply(key);
+  rememberEdit(previous);
+  if(result==='speak'){deliver(composer.text.trim());draftStatus.textContent=localizedMessage('Satz bewusst zum Vorlesen ausgewählt.');}
+  else if(result==='empty'){draftStatus.textContent=localizedMessage('Schreibe zuerst einen Satz.');}
+  else if(result==='full'){draftStatus.textContent=localizedMessage('Maximal 300 Zeichen. Entferne zuerst etwas Text.');}
+  else if(result==='back'){draftStatus.textContent=localizedMessage('Zurück zur Reihenauswahl.');}
+  else{
+    displayDraft();draftStatus.textContent=localizedMessage('Text bearbeitet. Es wurde noch nichts gesprochen.');
+    // Only explicit Joystick OK on a letter can trigger this focus change.
+    // No suggestion is ever inserted by a prediction or by focus movement.
+    if(joystickConfirming&&autoSuggestEnabled&&mode==='write'&&
+       /^[\p{L}]$/u.test(key)&&composer.text!==previous&&
+       !letterOnlyMode&&suggestionRowPresent){
+      const firstUsable=activeSuggestions.findIndex(w=>completeWord(composer.text,w,composer.maxLength).ok);
+      if(firstUsable>=0&&navValid(suggestionButtons[firstUsable])){
+       savedLetterTarget=joystickTarget;navRow=0;navCol=firstUsable;
+       paintNav(true);
+       draftStatus.textContent=localizedMessage('Wortvorschlag markiert: OK übernimmt, ↓ führt zum letzten Buchstaben zurück.');
+      }
+    }
+  }
+}
+function textToSpeech(words){
+  if(!speechEnabled)return;
+  if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window)){
+    status.textContent=localizedMessage('Text sichtbar. Sprachausgabe ist in diesem Browser nicht verfügbar.');return;
+  }
+  try{
+    window.speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(words);
+    utterance.lang=LANGUAGE_PACKS[activeLanguage]?.tag||'de-DE';utterance.rate=.95;utterance.volume=.95;
+    window.speechSynthesis.speak(utterance);
+  }catch(err){status.textContent=localizedMessage('Text sichtbar. Vorlesen auf diesem Gerät nicht verfügbar.');}
+}
+function deliver(words){
+  if(!words||!words.trim())return;
+  last=words;lastMessage.textContent=words;repeat.disabled=false;
+  status.textContent=localizedMessage('Ausgabe bewusst gewählt.'+(speechEnabled?' Sprachausgabe gestartet.':' Sprachausgabe ist aus.'));
+  textToSpeech(words);
+}
+function setMode(next){
+  if(mode===next)return;
+  savedLetterTarget=null;
+  stopScan();
+  mode=next;
+  quickView.hidden=next!=='quick';writeView.hidden=next!=='write';
+  quickButton.setAttribute('aria-pressed',String(next==='quick'));
+  writeButton.setAttribute('aria-pressed',String(next==='write'));
+  keyboardScan.reset();scanIndex=0;navRow=0;navCol=0;render();paintNav(true);
+  status.textContent=localizedMessage(next==='quick'?'Schnellauswahl bereit.':'Schreibmodus bereit. Erst Reihe, dann Buchstabe wählen.');
+}
+function scanLength(){return mode==='quick'?PHRASES.length:ROWS.length;}
+function render(){
+  phraseButtons.forEach((b,i)=>{b.dataset.active=String(timer!==null && mode==='quick' && i===scanIndex);});
+  keyboardButtons.forEach(({group,buttons},r)=>{
+    const matrixRow=r+(!letterOnlyMode&&suggestionRowPresent?1:0);
+    const rowActive=timer!==null&&mode==='write'&&scanKind==='keyboard'&&keyboardScan.stage==='row'&&matrixRow===keyboardScan.index;
+    group.dataset.active=String(rowActive);
+    buttons.forEach((b,col)=>{
+      b.dataset.active=String(timer!==null&&mode==='write'&&scanKind==='keyboard'&&keyboardScan.stage==='key'&&matrixRow===keyboardScan.row&&col===keyboardScan.index);
+    });
+  });
+  controlRow.dataset.active=String(timer!==null&&mode==='write'&&scanKind==='keyboard'&&keyboardScan.stage==='row'&&keyboardScan.index===keyboardScan.rows.length-1);
+  controlButtons.forEach((b,i)=>{b.dataset.active=String(timer!==null&&mode==='write'&&scanKind==='keyboard'&&keyboardScan.stage==='key'&&keyboardScan.row===keyboardScan.rows.length-1&&keyboardScan.index===i);});
+  suggestionRow.dataset.active=String(timer!==null&&mode==='write'&&scanKind==='keyboard'&&!letterOnlyMode&&suggestionRowPresent&&keyboardScan.stage==='row'&&keyboardScan.index===0);
+  suggestionButtons.forEach((b,i)=>{
+    b.dataset.active=String(timer!==null&&mode==='write'&&suggestionRowPresent&&(scanKind==='suggestions'?scanIndex===i:scanKind==='keyboard'&&!letterOnlyMode&&keyboardScan.stage==='key'&&keyboardScan.row===0&&keyboardScan.index===i));
+  });
+  paintSuggestionButtons();
+  if(timer!==null){
+    scanPhase.textContent=localizedMessage(mode==='quick'?'Schnellauswahl – aktuelles Feld':
+      scanKind==='suggestions'?'Wortvorschläge – nächstes Wort wählen':
+      keyboardScan.stage==='row'?(letterOnlyMode?'Schreiben – nur Buchstabenreihen':'Schreiben – Vorschläge oder Buchstabenreihe wählen'):
+      (!letterOnlyMode&&suggestionRowPresent&&keyboardScan.row===0?'Schreiben – Wort oder ABC-Abkürzung wählen':'Schreiben – Buchstabe auswählen'));
+    scanCurrent.textContent=localizedMessage(mode==='quick'?PHRASES[scanIndex][1]:
+      scanKind==='suggestions'?activeSuggestions[scanIndex]:keyboardScan.label());
+  }
+}
+function stopScan(message){
+  careOnlyScan=false;
+  if(timer!==null)clearInterval(timer);
+  timer=null;scanHud.hidden=true;document.body.classList.remove('scanning');
+  scanToggle.textContent=localizedMessage('Scan starten');scanToggle.setAttribute('aria-pressed','false');scanChoose.disabled=true;
+  wordScanToggle.textContent=localizedMessage('Wortvorschläge scannen');wordScanToggle.setAttribute('aria-pressed','false');
+  render();if(message)status.textContent=localizedMessage(message);
+}
+function tick(){
+  if(mode==='quick')scanIndex=careOnlyScan
+  ? (scanIndex+1<PHRASES.length?scanIndex+1:GENERAL_PHRASES.length)
+  : (scanIndex+1)%PHRASES.length;
+  else if(scanKind==='suggestions')scanIndex=(scanIndex+1)%activeSuggestions.length;
+  else keyboardScan.next();
+  const index=mode==='quick'||scanKind==='suggestions'?scanIndex:keyboardScan.index;
+  if(index===(mode==='quick'&&careOnlyScan?GENERAL_PHRASES.length:0)){
+    cycles++;
+    const max=Number(scanRounds.value);
+    if(max>0&&cycles>=max){stopScan('Scan nach der festgelegten Anzahl Umläufe beendet – keine automatische Auswahl.');return;}
+  }
+  render();
+}
+function startTimer(){
+  timer=setInterval(tick,Number(scanSpeed.value));
+}
+function startScan(kind='keyboard'){
+ if(inputMode!=='switch'){status.textContent=localizedMessage('Zum Starten bitte den Ein-Tasten-Scan auswählen.');return;}
+ if(timer!==null)return;
+  if(kind==='suggestions'&&(mode!=='write'||!activeSuggestions.length))return;
+  careOnlyScan=false;
+  scanKind=kind;
+  scanIndex=0;keyboardScan.reset();cycles=0;
+  scanHud.hidden=false;document.body.classList.add('scanning');
+  scanToggle.textContent=localizedMessage('Scan stoppen');scanToggle.setAttribute('aria-pressed','true');scanChoose.disabled=false;
+  wordScanToggle.textContent=localizedMessage(scanKind==='suggestions'?'Wortscan stoppen':'Wortvorschläge scannen');
+  wordScanToggle.setAttribute('aria-pressed',String(scanKind==='suggestions'));
+  status.textContent=localizedMessage(mode==='quick'?'Scan der Schnellaussagen läuft.':scanKind==='suggestions'?'Wortscan läuft. Wähle ein gelb markiertes Wort.':'Reihenscan läuft. Erst Reihe, dann Taste wählen.');
+  // Initialize before first timer tick so the first choice is visible for a full interval.
+  startTimer();render();scanToggle.blur();
+}
+function selectCurrent(method){
+  if(timer===null)return;
+  if(mode==='quick'){
+    const words=PHRASES[scanIndex][1];stopScan();
+    deliver(words);return;
+  }
+  // Dedicated one-button mode for word suggestions: select a whole word.
+  if(scanKind==='suggestions'){
+    const selected=activeSuggestions[scanIndex];
+    if(!selected){status.textContent=localizedMessage('Kein Wort markiert.');return;}
+    if(!autoContinueEnabled){
+      stopScan('Wort bewusst gewählt.');
+      insertSuggestedWord(selected);
+      return;
+    }
+    if(!insertSuggestedWord(selected)){
+      status.textContent=localizedMessage('Wort konnte nicht eingefügt werden.');return;
+    }
+    if(timer===null)return;
+    // Suggestions may change after insertion. The first new word gets full time.
+    scanIndex=0;cycles=0;clearInterval(timer);startTimer();render();
+    status.textContent=localizedMessage('Wort eingefügt. Wortscan läuft weiter – es wird nichts vorgelesen.');
+    return;
+  }
+  const pickedSuggestion=!letterOnlyMode&&suggestionRowPresent&&keyboardScan.stage==='key'&&keyboardScan.row===0;
+  const result=keyboardScan.choose();
+  cycles=0;
+  if(result.kind==='row'){
+    clearInterval(timer);startTimer();render();
+    status.textContent=localizedMessage('Reihe '+(result.row+1)+' gewählt. Jetzt Taste auswählen.');
+    return;
+  }
+  if(result.kind==='back'){
+    clearInterval(timer);startTimer();render();
+    status.textContent=localizedMessage('Zurück zur Reihenauswahl.');return;
+  }
+  if(result.key==='↶ Rückgängig'){
+    undoLast();return;
+  }
+  if(result.key==='Scan stoppen'){
+    stopScan('Scan auf ausdrücklichen Befehl gestoppt.');return;
+  }
+  if(result.key==='Nur ABC'){
+    setLetterMode(true,'ABC-Modus bewusst gewählt.');return;
+  }
+  if(pickedSuggestion&&result.key==='ABC →'){
+    setLetterMode(true,'Wortvorschläge übersprungen – jetzt nur Buchstaben auswählen.');
+    return;
+  }
+  if(result.key==='Wörter an'){
+    setLetterMode(false,'Wortvorschläge wieder im Reihenscan verfügbar.');
+    return;
+  }
+  // Completing a suggestion inserts only text; it cannot speak.
+  const word=pickedSuggestion?result.key:null;
+  if((!pickedSuggestion&&result.key==='Satz sprechen')||!autoContinueEnabled){
+    stopScan('Auswahl ('+method+').');
+    if(pickedSuggestion)insertSuggestedWord(word);
+    else handleKey(result.key);
+    return;
+  }
+  if(pickedSuggestion){
+    if(!insertSuggestedWord(word)){
+      status.textContent=localizedMessage('Kein gültiger Wortvorschlag. Du kannst weiter auswählen.');
+    }
+  }else{
+    handleKey(result.key);
+  }
+  if(timer===null)return;
+  // Reinitialize the row scan, allowing full time for the first row.
+  clearInterval(timer);
+  startTimer();render();
+  status.textContent=localizedMessage('Zeichen oder Wort bearbeitet. Scan läuft weiter; jede Auswahl bleibt freiwillig.');
+}
+letterScanToggle.addEventListener('click',()=>{
+  setLetterMode(!letterOnlyMode,letterOnlyMode?'Wortvorschläge wieder im Scan.':'Jetzt nur Buchstabenreihen.');
+  if(timer===null&&mode==='write')startScan('keyboard');
+});
+autoContinue.addEventListener('click',()=>{
+ autoContinueEnabled=!autoContinueEnabled;
+ autoContinue.setAttribute('aria-pressed',String(autoContinueEnabled));
+ autoContinue.textContent=localizedMessage('Nach Zeichen/Wort weiterscannen: '+(autoContinueEnabled?'An':'Aus'));
+ status.textContent=localizedMessage(autoContinueEnabled
+  ? 'Nach einem Zeichen oder Wort beginnt automatisch wieder der Reihenscan.'
+  : 'Nach jedem Zeichen oder Wort stoppt der Scan wieder.');
+});
+wordScanToggle.addEventListener('click',()=>{
+  if(timer!==null)stopScan('Scan gewechselt oder beendet.');
+  else startScan('suggestions');
+});
+undoDraft.addEventListener('click',()=>undoLast());
+quickButton.addEventListener('click',()=>setMode('quick'));
+writeButton.addEventListener('click',()=>setMode('write'));
+scanToggle.addEventListener('click',()=>timer===null?startScan('keyboard'):stopScan('Scan manuell gestoppt.'));
+scanChoose.addEventListener('click',()=>selectCurrent('Scan-Taste'));
+$('hud-choose').addEventListener('click',()=>selectCurrent('Scan-Taste'));
+$('hud-stop').addEventListener('click',()=>stopScan('Scan manuell gestoppt.'));
+scanSpeed.addEventListener('change',()=>{if(timer!==null){clearInterval(timer);startTimer();}});
+scanRounds.addEventListener('change',()=>{cycles=0;});
+draft.addEventListener('input',()=>{if(timer!==null)stopScan('Text direkt bearbeitet.');editHistory.length=0;composer.setText(draft.value);displayDraft();draftStatus.textContent=localizedMessage('Text bearbeitet. Noch keine Sprachausgabe.');});
+speakDraft.addEventListener('click',()=>{if(timer!==null)stopScan();handleKey('Satz sprechen');});
+clearDraft.addEventListener('click',()=>{
+ if(timer!==null)stopScan();
+ if(!clearArmed){clearArmed=true;clearDraft.textContent=localizedMessage('Wirklich alles löschen?');draftStatus.textContent=localizedMessage('Zur Bestätigung noch einmal tippen.');return;}
+ const previous=composer.text;composer.setText('');rememberEdit(previous);displayDraft();draftStatus.textContent=localizedMessage('Text gelöscht.');
+});
+repeat.addEventListener('click',()=>{if(last)textToSpeech(last);});
+speechToggle.addEventListener('click',()=>{
+ speechEnabled=!speechEnabled;speechToggle.setAttribute('aria-pressed',String(speechEnabled));
+ speechToggle.textContent=localizedMessage('Sprachausgabe: '+(speechEnabled?'An':'Aus'));
+ if(!speechEnabled&&'speechSynthesis' in window)window.speechSynthesis.cancel();
+});
+$('speech-stop').addEventListener('click',()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel();});
+window.addEventListener('mindspeak:selection-signal',event=>{
+ const signal=event.detail;
+ const choice=bridge.evaluate(signal,performance.now(),timer!==null);
+ if(choice.accepted)selectCurrent('Manuell simulierter Impuls');
+ if(signal&&signal.source==='simulated')mockResult.textContent=localizedMessage(choice.accepted
+  ? 'Simulierter Impuls akzeptiert. Kein EEG.'
+  : 'Simulierter Impuls abgelehnt: '+choice.reason+'.');
+});
+
+const I18N_DYNAMIC={"en":{"Zurück zur Reihenauswahl.":"Back to row selection.","Keine Eingabe zum Rückgängigmachen.":"Nothing to undo.","Letzte Eingabe rückgängig gemacht. Keine Sprachausgabe.":"Last entry undone. No speech played.","Keine Taste wählbar.":"No selectable key.","Joystick-Simulation: Pfeile bewegen, OK wählen. Kein EEG.":"Joystick simulation: arrows move, OK selects. No EEG.","Ein-Tasten-Scan bereit.":"One-switch scan ready.","Touchbedienung bereit.":"Touch control ready.","Nur Buchstabenreihen aktiv.":"Letter-only scanning active.","Wortvorschläge im Reihenscan wieder aktiv.":"Word predictions restored in row scanning.","Für das Wort ist kein Platz mehr (maximal 300 Zeichen).":"Not enough space for that word (300 characters maximum).","Vorschlag nicht mehr passend. Bitte erneut auswählen.":"Suggestion no longer matches. Choose again.","Satz bewusst zum Vorlesen ausgewählt.":"Message deliberately selected for speech.","Schreibe zuerst einen Satz.":"Write a message first.","Maximal 300 Zeichen. Entferne zuerst etwas Text.":"300 character limit. Delete some text first.","Text bearbeitet. Es wurde noch nichts gesprochen.":"Text edited. Nothing spoken yet.","Wortvorschlag markiert: OK übernimmt, ↓ führt zum letzten Buchstaben zurück.":"Suggestion highlighted: OK inserts; ↓ returns to the last letter.","Text sichtbar. Sprachausgabe ist in diesem Browser nicht verfügbar.":"Text shown. Speech is not available in this browser.","Text sichtbar. Vorlesen auf diesem Gerät nicht verfügbar.":"Text shown. Speech is unavailable on this device.","Ausgabe bewusst gewählt. Sprachausgabe gestartet.":"Selection confirmed. Speech started.","Ausgabe bewusst gewählt. Sprachausgabe ist aus.":"Selection confirmed. Speech is off.","Schnellauswahl bereit.":"Quick phrases ready.","Schreibmodus bereit. Erst Reihe, dann Buchstabe wählen.":"Writing ready. Choose a row, then a letter.","Schnellauswahl – aktuelles Feld":"Quick phrases – current choice","Wortvorschläge – nächstes Wort wählen":"Word suggestions – choose a word","Schreiben – nur Buchstabenreihen":"Writing – letter rows only","Schreiben – Vorschläge oder Buchstabenreihe wählen":"Writing – choose suggestions or a letter row","Schreiben – Wort wählen":"Writing – choose a word","Schreiben – Buchstabe wählen":"Writing – choose a letter","Scan nach der festgelegten Anzahl Umläufe beendet – keine automatische Auswahl.":"Scan stopped after the chosen number of cycles – no automatic selection.","Zum Starten bitte den Ein-Tasten-Scan auswählen.":"Select one-switch scanning to start.","Scan der Schnellaussagen läuft.":"Quick-phrase scan running.","Wortscan läuft. Wähle ein gelb markiertes Wort.":"Word scan running. Choose the highlighted word.","Reihenscan läuft. Erst Reihe, dann Taste wählen.":"Row scan running. First choose a row, then a key.","Kein Wort markiert.":"No word highlighted.","Wort konnte nicht eingefügt werden.":"Could not insert word.","Wort eingefügt. Wortscan läuft weiter – es wird nichts vorgelesen.":"Word inserted. Scanning continues without speech.","Wort bewusst gewählt.":"Word deliberately selected.","Kein gültiger Wortvorschlag. Du kannst weiter auswählen.":"No valid suggestion. You can continue scanning.","Zeichen oder Wort bearbeitet. Scan läuft weiter; jede Auswahl bleibt freiwillig.":"Character or word edited. Scanning continues; nothing is selected automatically.","Wortvorschläge wieder im Scan.":"Word predictions restored.","Jetzt nur Buchstabenreihen.":"Letter rows only now.","Nach einem Zeichen oder Wort beginnt automatisch wieder der Reihenscan.":"Row scanning resumes after an entry.","Nach jedem Zeichen oder Wort stoppt der Scan wieder.":"Scanning stops after each entry.","Text bearbeitet. Noch keine Sprachausgabe.":"Text edited. No speech yet.","Zur Bestätigung noch einmal tippen.":"Tap again to confirm.","Text gelöscht.":"Message deleted.","Scan manuell gestoppt.":"Scan stopped manually.","Scan auf ausdrücklichen Befehl gestoppt.":"Scan stopped by explicit command.","Scan gewechselt oder beendet.":"Scan changed or stopped.","Scan mit Escape gestoppt.":"Scan stopped with Escape.","Scan beim App-Wechsel sicherheitshalber gestoppt.":"Scan stopped for safety when switching apps.","Tastereingabe deaktiviert.":"Switch input disabled.","Tastereingabe manuell deaktiviert.":"Switch input disabled manually.","ESC: Tastereingabe und Scan deaktiviert.":"Escape: switch input and scan disabled.","App-Wechsel: Tastereingabe aus Sicherheitsgründen deaktiviert.":"App change: switch input disabled for safety.","Tastereingabe wegen Moduswechsel deaktiviert.":"Switch input disabled after mode change.","Scan vor Sprachwechsel beendet.":"Scan stopped before switching languages.","Pflege-Scan neu gestartet.":"Care scan restarted.","Pflege-Scan läuft: Nur 17 Pflegeaussagen werden markiert. Auswahl mit einem externen Taster oder „Dieses Feld auswählen“.":"Care scan running: only 17 care phrases are highlighted. Select with a switch or “Select this item”.","Pflege-Schnellaussagen: Pfeile bewegen, OK spricht nur die gewählte Aussage.":"Care phrases: arrows navigate, OK speaks only the selected phrase.","Wortvorschläge wieder sichtbar.":"Predictions visible again.","ABC-Scan gewählt":"Letter-only scanning selected","Vorschlagsreihe wieder aktiv.":"Suggestion row restored.","Noch kein Impuls.":"No impulse yet.","Simulierter Impuls akzeptiert. Kein EEG.":"Simulated impulse accepted. Not EEG.","Satz vorlesen":"Speak message","Satz löschen":"Delete message","Wirklich alles löschen?":"Really delete everything?","Rückgängig":"Undo","Wörter an":"Words on","Nur ABC":"Letters only","Zurück":"Back","Scan stoppen":"Stop scan","Scan starten":"Start scan","Wortvorschläge scannen":"Scan suggestions","Wortscan stoppen":"Stop word scan","Wortvorschläge wieder einschalten":"Restore word suggestions","Direkt Buchstaben scannen":"Scan letters only","Nach Zeichen/Wort weiterscannen: An":"Continue scan after entry: On","Nach Zeichen/Wort weiterscannen: Aus":"Continue scan after entry: Off","Sprachausgabe: An":"Speech: On","Sprachausgabe: Aus":"Speech: Off","Tastereingabe aktivieren":"Enable switch input","Tastereingabe deaktivieren":"Disable switch input","Letztes Zeichen entfernen":"Delete last character","Leerzeichen":"Space","Noch kein Wortvorschlag":"No suggestion yet","Kein Vorschlag":"No suggestion","Wort ":"Word ","Ausgabe bewusst gewählt.":"Selection confirmed.","Feld":"item","Buchstabe":"letter","Markiert: ":"Selected: "," · Reihe ":" · row "," · Feld ":" · item "," · ↓ zurück zu ":" · ↓ back to ","Taster neu eingestellt: ":"Switch key changed: ","Nächster Tastendruck startet oder bestätigt den Scan.":"Next press starts or confirms scanning."},"es":{"Zurück zur Reihenauswahl.":"Volver a la selección de filas.","Keine Eingabe zum Rückgängigmachen.":"No hay nada que deshacer.","Letzte Eingabe rückgängig gemacht. Keine Sprachausgabe.":"Última entrada deshecha. Sin voz.","Keine Taste wählbar.":"No hay ninguna tecla seleccionable.","Joystick-Simulation: Pfeile bewegen, OK wählen. Kein EEG.":"Simulación de joystick: las flechas mueven y OK selecciona. Sin EEG.","Ein-Tasten-Scan bereit.":"Barrido con pulsador listo.","Touchbedienung bereit.":"Control táctil listo.","Nur Buchstabenreihen aktiv.":"Barrido de letras activo.","Wortvorschläge im Reihenscan wieder aktiv.":"Sugerencias reactivadas en el barrido.","Für das Wort ist kein Platz mehr (maximal 300 Zeichen).":"No cabe la palabra (máximo 300 caracteres).","Vorschlag nicht mehr passend. Bitte erneut auswählen.":"La sugerencia ya no encaja. Elige otra.","Satz bewusst zum Vorlesen ausgewählt.":"Mensaje seleccionado para leer en voz alta.","Schreibe zuerst einen Satz.":"Escribe primero un mensaje.","Maximal 300 Zeichen. Entferne zuerst etwas Text.":"Máximo 300 caracteres. Borra algo de texto.","Text bearbeitet. Es wurde noch nichts gesprochen.":"Texto modificado. Aún no se ha hablado.","Wortvorschlag markiert: OK übernimmt, ↓ führt zum letzten Buchstaben zurück.":"Sugerencia resaltada: OK inserta; ↓ vuelve a la última letra.","Text sichtbar. Sprachausgabe ist in diesem Browser nicht verfügbar.":"Texto visible. La voz no está disponible en este navegador.","Text sichtbar. Vorlesen auf diesem Gerät nicht verfügbar.":"Texto visible. La voz no funciona en este dispositivo.","Ausgabe bewusst gewählt. Sprachausgabe gestartet.":"Selección confirmada. Reproduciendo voz.","Ausgabe bewusst gewählt. Sprachausgabe ist aus.":"Selección confirmada. Voz desactivada.","Schnellauswahl bereit.":"Frases rápidas listas.","Schreibmodus bereit. Erst Reihe, dann Buchstabe wählen.":"Escritura lista. Elige una fila y luego una letra.","Schnellauswahl – aktuelles Feld":"Frases rápidas – opción actual","Wortvorschläge – nächstes Wort wählen":"Sugerencias – elegir palabra","Schreiben – nur Buchstabenreihen":"Escritura – solo filas de letras","Schreiben – Vorschläge oder Buchstabenreihe wählen":"Escritura – elegir sugerencias o fila de letras","Schreiben – Wort wählen":"Escritura – elegir palabra","Schreiben – Buchstabe wählen":"Escritura – elegir letra","Scan nach der festgelegten Anzahl Umläufe beendet – keine automatische Auswahl.":"Barrido detenido tras las vueltas previstas; no hubo selección automática.","Zum Starten bitte den Ein-Tasten-Scan auswählen.":"Elige barrido con pulsador para empezar.","Scan der Schnellaussagen läuft.":"Barrido de frases rápidas en curso.","Wortscan läuft. Wähle ein gelb markiertes Wort.":"Barrido de palabras en curso. Elige la palabra resaltada.","Reihenscan läuft. Erst Reihe, dann Taste wählen.":"Barrido por filas. Elige la fila y luego la tecla.","Kein Wort markiert.":"No hay palabra resaltada.","Wort konnte nicht eingefügt werden.":"No se pudo insertar la palabra.","Wort eingefügt. Wortscan läuft weiter – es wird nichts vorgelesen.":"Palabra insertada. El barrido continúa sin voz.","Wort bewusst gewählt.":"Palabra seleccionada.","Kein gültiger Wortvorschlag. Du kannst weiter auswählen.":"No hay sugerencia válida. Puedes continuar.","Zeichen oder Wort bearbeitet. Scan läuft weiter; jede Auswahl bleibt freiwillig.":"Carácter o palabra editado. El barrido continúa; nada se elige automáticamente.","Wortvorschläge wieder im Scan.":"Sugerencias reactivadas.","Jetzt nur Buchstabenreihen.":"Ahora solo filas de letras.","Nach einem Zeichen oder Wort beginnt automatisch wieder der Reihenscan.":"El barrido continúa tras escribir.","Nach jedem Zeichen oder Wort stoppt der Scan wieder.":"El barrido se detiene tras cada entrada.","Text bearbeitet. Noch keine Sprachausgabe.":"Texto modificado. Sin voz todavía.","Zur Bestätigung noch einmal tippen.":"Toca otra vez para confirmar.","Text gelöscht.":"Mensaje borrado.","Scan manuell gestoppt.":"Barrido detenido manualmente.","Scan auf ausdrücklichen Befehl gestoppt.":"Barrido detenido por orden expresa.","Scan gewechselt oder beendet.":"Barrido cambiado o detenido.","Scan mit Escape gestoppt.":"Barrido detenido con Escape.","Scan beim App-Wechsel sicherheitshalber gestoppt.":"Barrido detenido por seguridad al cambiar de aplicación.","Tastereingabe deaktiviert.":"Pulsador desactivado.","Tastereingabe manuell deaktiviert.":"Pulsador desactivado manualmente.","ESC: Tastereingabe und Scan deaktiviert.":"Escape: pulsador y barrido desactivados.","App-Wechsel: Tastereingabe aus Sicherheitsgründen deaktiviert.":"Cambio de aplicación: pulsador desactivado por seguridad.","Tastereingabe wegen Moduswechsel deaktiviert.":"Pulsador desactivado al cambiar el modo.","Scan vor Sprachwechsel beendet.":"Barrido detenido antes de cambiar de idioma.","Pflege-Scan neu gestartet.":"Barrido de cuidados reiniciado.","Pflege-Scan läuft: Nur 17 Pflegeaussagen werden markiert. Auswahl mit einem externen Taster oder „Dieses Feld auswählen“.":"Barrido de cuidados: solo se muestran 17 frases. Usa el pulsador o «Seleccionar esta opción».","Pflege-Schnellaussagen: Pfeile bewegen, OK spricht nur die gewählte Aussage.":"Frases de cuidados: las flechas navegan y OK pronuncia la frase elegida.","Wortvorschläge wieder sichtbar.":"Sugerencias visibles de nuevo.","ABC-Scan gewählt":"Barrido solo de letras elegido","Vorschlagsreihe wieder aktiv.":"Fila de sugerencias reactivada.","Noch kein Impuls.":"Todavía no hay impulso.","Simulierter Impuls akzeptiert. Kein EEG.":"Impulso simulado aceptado. Sin EEG.","Satz vorlesen":"Leer mensaje","Satz löschen":"Borrar mensaje","Wirklich alles löschen?":"¿Seguro que quieres borrar todo?","Rückgängig":"Deshacer","Wörter an":"Activar palabras","Nur ABC":"Solo letras","Zurück":"Volver","Scan stoppen":"Detener barrido","Scan starten":"Iniciar barrido","Wortvorschläge scannen":"Barrer sugerencias","Wortscan stoppen":"Detener barrido de palabras","Wortvorschläge wieder einschalten":"Restaurar sugerencias","Direkt Buchstaben scannen":"Barrer solo letras","Nach Zeichen/Wort weiterscannen: An":"Continuar tras escribir: Sí","Nach Zeichen/Wort weiterscannen: Aus":"Continuar tras escribir: No","Sprachausgabe: An":"Voz: activada","Sprachausgabe: Aus":"Voz: desactivada","Tastereingabe aktivieren":"Activar pulsador","Tastereingabe deaktivieren":"Desactivar pulsador","Letztes Zeichen entfernen":"Borrar último carácter","Leerzeichen":"Espacio","Noch kein Wortvorschlag":"Todavía no hay sugerencias","Kein Vorschlag":"Sin sugerencias","Wort ":"Palabra ","Ausgabe bewusst gewählt.":"Selección confirmada.","Feld":"opción","Buchstabe":"letra","Markiert: ":"Seleccionado: "," · Reihe ":" · fila "," · Feld ":" · opción "," · ↓ zurück zu ":" · ↓ volver a ","Taster neu eingestellt: ":"Tecla del pulsador cambiada: ","Nächster Tastendruck startet oder bestätigt den Scan.":"La siguiente pulsación inicia o confirma el barrido."},"fr":{"Zurück zur Reihenauswahl.":"Retour au choix des rangées.","Keine Eingabe zum Rückgängigmachen.":"Rien à annuler.","Letzte Eingabe rückgängig gemacht. Keine Sprachausgabe.":"Dernière saisie annulée. Aucune parole.","Keine Taste wählbar.":"Aucune touche sélectionnable.","Joystick-Simulation: Pfeile bewegen, OK wählen. Kein EEG.":"Simulation de joystick : les flèches déplacent, OK valide. Aucun EEG.","Ein-Tasten-Scan bereit.":"Balayage à un contacteur prêt.","Touchbedienung bereit.":"Commande tactile prête.","Nur Buchstabenreihen aktiv.":"Balayage des lettres actif.","Wortvorschläge im Reihenscan wieder aktiv.":"Suggestions réactivées dans le balayage.","Für das Wort ist kein Platz mehr (maximal 300 Zeichen).":"Pas assez de place pour ce mot (300 caractères maximum).","Vorschlag nicht mehr passend. Bitte erneut auswählen.":"La suggestion ne correspond plus. Choisissez à nouveau.","Satz bewusst zum Vorlesen ausgewählt.":"Message choisi pour être prononcé.","Schreibe zuerst einen Satz.":"Écrivez d’abord un message.","Maximal 300 Zeichen. Entferne zuerst etwas Text.":"300 caractères maximum. Effacez d’abord du texte.","Text bearbeitet. Es wurde noch nichts gesprochen.":"Texte modifié. Rien n’a été prononcé.","Wortvorschlag markiert: OK übernimmt, ↓ führt zum letzten Buchstaben zurück.":"Suggestion surlignée : OK insère ; ↓ revient à la dernière lettre.","Text sichtbar. Sprachausgabe ist in diesem Browser nicht verfügbar.":"Texte affiché. La voix n’est pas disponible dans ce navigateur.","Text sichtbar. Vorlesen auf diesem Gerät nicht verfügbar.":"Texte affiché. Lecture vocale indisponible sur cet appareil.","Ausgabe bewusst gewählt. Sprachausgabe gestartet.":"Choix confirmé. Lecture vocale lancée.","Ausgabe bewusst gewählt. Sprachausgabe ist aus.":"Choix confirmé. Voix désactivée.","Schnellauswahl bereit.":"Phrases rapides prêtes.","Schreibmodus bereit. Erst Reihe, dann Buchstabe wählen.":"Écriture prête. Choisissez une rangée puis une lettre.","Schnellauswahl – aktuelles Feld":"Phrases rapides – choix actuel","Wortvorschläge – nächstes Wort wählen":"Suggestions – choisir un mot","Schreiben – nur Buchstabenreihen":"Écriture – rangées de lettres seules","Schreiben – Vorschläge oder Buchstabenreihe wählen":"Écriture – choisir les suggestions ou une rangée de lettres","Schreiben – Wort wählen":"Écriture – choisir un mot","Schreiben – Buchstabe wählen":"Écriture – choisir une lettre","Scan nach der festgelegten Anzahl Umläufe beendet – keine automatische Auswahl.":"Balayage arrêté après le nombre de tours choisi ; aucune sélection automatique.","Zum Starten bitte den Ein-Tasten-Scan auswählen.":"Choisissez le balayage à un contacteur pour commencer.","Scan der Schnellaussagen läuft.":"Balayage des phrases rapides en cours.","Wortscan läuft. Wähle ein gelb markiertes Wort.":"Balayage des mots en cours. Choisissez le mot surligné.","Reihenscan läuft. Erst Reihe, dann Taste wählen.":"Balayage par rangées. Choisissez la rangée puis la touche.","Kein Wort markiert.":"Aucun mot surligné.","Wort konnte nicht eingefügt werden.":"Impossible d’insérer le mot.","Wort eingefügt. Wortscan läuft weiter – es wird nichts vorgelesen.":"Mot inséré. Le balayage continue sans parole.","Wort bewusst gewählt.":"Mot choisi volontairement.","Kein gültiger Wortvorschlag. Du kannst weiter auswählen.":"Aucune suggestion valide. Vous pouvez continuer.","Zeichen oder Wort bearbeitet. Scan läuft weiter; jede Auswahl bleibt freiwillig.":"Caractère ou mot modifié. Le balayage continue ; rien n’est sélectionné automatiquement.","Wortvorschläge wieder im Scan.":"Suggestions réactivées.","Jetzt nur Buchstabenreihen.":"Maintenant, rangées de lettres seules.","Nach einem Zeichen oder Wort beginnt automatisch wieder der Reihenscan.":"Le balayage reprend après une saisie.","Nach jedem Zeichen oder Wort stoppt der Scan wieder.":"Le balayage s’arrête après chaque saisie.","Text bearbeitet. Noch keine Sprachausgabe.":"Texte modifié. Aucune parole.","Zur Bestätigung noch einmal tippen.":"Touchez encore pour confirmer.","Text gelöscht.":"Message effacé.","Scan manuell gestoppt.":"Balayage arrêté manuellement.","Scan auf ausdrücklichen Befehl gestoppt.":"Balayage arrêté sur commande explicite.","Scan gewechselt oder beendet.":"Balayage modifié ou arrêté.","Scan mit Escape gestoppt.":"Balayage arrêté avec Échap.","Scan beim App-Wechsel sicherheitshalber gestoppt.":"Balayage arrêté par sécurité lors du changement d’application.","Tastereingabe deaktiviert.":"Contacteur désactivé.","Tastereingabe manuell deaktiviert.":"Contacteur désactivé manuellement.","ESC: Tastereingabe und Scan deaktiviert.":"Échap : contacteur et balayage désactivés.","App-Wechsel: Tastereingabe aus Sicherheitsgründen deaktiviert.":"Changement d’application : contacteur désactivé par sécurité.","Tastereingabe wegen Moduswechsel deaktiviert.":"Contacteur désactivé après changement de mode.","Scan vor Sprachwechsel beendet.":"Balayage arrêté avant changement de langue.","Pflege-Scan neu gestartet.":"Balayage des soins relancé.","Pflege-Scan läuft: Nur 17 Pflegeaussagen werden markiert. Auswahl mit einem externen Taster oder „Dieses Feld auswählen“.":"Balayage des soins : seules 17 phrases sont proposées. Utilisez le contacteur ou « Choisir cet élément ».","Pflege-Schnellaussagen: Pfeile bewegen, OK spricht nur die gewählte Aussage.":"Phrases de soins : les flèches naviguent, OK prononce seulement la phrase choisie.","Wortvorschläge wieder sichtbar.":"Suggestions de nouveau visibles.","ABC-Scan gewählt":"Balayage des lettres seules choisi","Vorschlagsreihe wieder aktiv.":"Rangée de suggestions réactivée.","Noch kein Impuls.":"Aucune impulsion.","Simulierter Impuls akzeptiert. Kein EEG.":"Impulsion simulée acceptée. Pas d’EEG.","Satz vorlesen":"Lire le message","Satz löschen":"Effacer le message","Wirklich alles löschen?":"Tout effacer, vraiment ?","Rückgängig":"Annuler","Wörter an":"Activer les mots","Nur ABC":"Lettres seules","Zurück":"Retour","Scan stoppen":"Arrêter le balayage","Scan starten":"Lancer le balayage","Wortvorschläge scannen":"Balayer les suggestions","Wortscan stoppen":"Arrêter le balayage des mots","Wortvorschläge wieder einschalten":"Rétablir les suggestions","Direkt Buchstaben scannen":"Balayer les lettres seules","Nach Zeichen/Wort weiterscannen: An":"Continuer après saisie : oui","Nach Zeichen/Wort weiterscannen: Aus":"Continuer après saisie : non","Sprachausgabe: An":"Voix : activée","Sprachausgabe: Aus":"Voix : désactivée","Tastereingabe aktivieren":"Activer le contacteur","Tastereingabe deaktivieren":"Désactiver le contacteur","Letztes Zeichen entfernen":"Effacer le dernier caractère","Leerzeichen":"Espace","Noch kein Wortvorschlag":"Aucune suggestion","Kein Vorschlag":"Aucune suggestion","Wort ":"Mot ","Ausgabe bewusst gewählt.":"Choix confirmé.","Feld":"élément","Buchstabe":"lettre","Markiert: ":"Sélectionné : "," · Reihe ":" · rangée "," · Feld ":" · élément "," · ↓ zurück zu ":" · ↓ retour à ","Taster neu eingestellt: ":"Touche du contacteur modifiée : ","Nächster Tastendruck startet oder bestätigt den Scan.":"La prochaine pression lance ou confirme le balayage."}};
+function localizedMessage(message){
+ if(typeof message!=='string'||activeLanguage==='de')return message;
+ const trans=I18N_DYNAMIC[activeLanguage]||{};
+ if(Object.prototype.hasOwnProperty.call(trans,message))return trans[message];
+ let m;
+ if((m=message.match(/^Wort (.+) eingefügt – noch nichts gesprochen\.$/)))return ({en:'Word ',es:'Palabra ',fr:'Mot '})[activeLanguage]+m[1]+({en:' inserted, not spoken.',es:' insertada, sin voz.',fr:' inséré, sans parole.'})[activeLanguage];
+ if((m=message.match(/^Reihe (\d+) gewählt\. Jetzt Taste auswählen\.$/)))return ({en:'Row ',es:'Fila ',fr:'Rangée '})[activeLanguage]+m[1]+({en:' selected. Choose a key.',es:' elegida. Selecciona una tecla.',fr:' choisie. Choisissez une touche.'})[activeLanguage];
+ if((m=message.match(/^Reihe (\d+): (.*)$/)))return ({en:'Row ',es:'Fila ',fr:'Rangée '})[activeLanguage]+m[1]+': '+m[2].replaceAll('Wörter an',localizedMessage('Wörter an')).replaceAll('Scan stoppen',localizedMessage('Scan stoppen')).replaceAll('Zurück',localizedMessage('Zurück'));
+ if(message.startsWith('Markiert: ')){
+   return message.replace('Markiert: ',localizedMessage('Markiert: ')).replace(' · Reihe ',localizedMessage(' · Reihe ')).replace(' · Feld ',localizedMessage(' · Feld ')).replace(' · ↓ zurück zu ',localizedMessage(' · ↓ zurück zu '));
+ }
+ if(message.startsWith('Simulierter Impuls abgelehnt: '))return ({en:'Simulated impulse rejected: ',es:'Impulso simulado rechazado: ',fr:'Impulsion simulée rejetée : '})[activeLanguage]+message.slice(30);
+ if(message.startsWith('↶ Rückgängig'))return '↶ '+localizedMessage('Rückgängig');
+ if(message.startsWith('Tastereingabe aktiv. ')){
+  const label=message.includes('Leertaste')?({en:'Space',es:'Espacio',fr:'Espace'})[activeLanguage]:'Enter';
+  return ({
+   en:'Switch input active. '+label+' is assigned. First press starts scanning; later presses select the highlighted item.',
+   es:'Pulsador activo. Tecla '+label+' asignada. La primera pulsación inicia el barrido y las siguientes confirman la opción resaltada.',
+   fr:'Contacteur actif. Touche '+label+' assignée. La première pression lance le balayage et les suivantes choisissent la sélection.'
+  })[activeLanguage];
+ }
+ if(message.startsWith('Taster neu eingestellt: ')){
+  const label=message.includes('Leertaste')?({en:'Space',es:'Espacio',fr:'Espace'})[activeLanguage]:'Enter';
+  return ({
+   en:'Switch key changed to '+label+'. Next press starts or confirms scanning.',
+   es:'Tecla del pulsador cambiada a '+label+'. La siguiente pulsación inicia o confirma.',
+   fr:'Touche du contacteur passée à '+label+'. La prochaine pression lance ou confirme.'
+  })[activeLanguage];
+ }
+ if(message.startsWith('Tastereingabe ignoriert: '))return ({en:'Switch press ignored: ',es:'Pulsación ignorada: ',fr:'Pression ignorée : '})[activeLanguage]+message.slice('Tastereingabe ignoriert: '.length);
+ if(message.startsWith('Tasterimpuls '))return ({en:'Switch impulse ',es:'Impulso del pulsador ',fr:'Impulsion du contacteur '})[activeLanguage]+message.slice('Tasterimpuls '.length).replace(' erkannt: ',' detected: ').replace('Scan läuft; nur gezielte Auswahl wird ausgeführt.','Scan running; only deliberate selections are activated.').replace('Scan beendet; nächster Impuls startet erneut.','Scan finished; the next press starts again.').replace('Taste loslassen vor erneutem Drücken.','Release before pressing again.');
+ return message;
+}
+
+const I18N_FIXED={"en":{"app-title":"Your words. Your choice.","app-intro":"Choose a quick phrase or write your own message by touch or one-switch scanning. No EEG or brain control is connected.","language-note":"To avoid mixing languages, finish or delete your draft before changing the language. Switching languages never speaks automatically.","safety-notice":"Research prototype: Not a certified communication aid. “Please help” does not send an emergency alert. No EEG or P300 system is connected.","input-method-label":"Choose your input method","method-help":"Joystick: on-screen arrows and OK. External switch: activate the keyboard/HID test first. No device is paired or detected automatically.","external-title":"External single switch · Keyboard/HID test","external-description":"A compatible switch must send Space or Enter as a keyboard key (for example, via Bluetooth or USB). This demo cannot verify a hardware connection. The browser must receive the key presses.","external-key-label":"Which key does your device send?","external-safety":"Safety: Held keys, key repeats, and signals within 650 ms of an accepted press are ignored. Only the selected key works. Escape or leaving the app disables switch input. Text fields remain protected.","focus-suggestion-note":"Highlight a word suggestion after each letter (joystick test only; OK inserts it, ↓ returns to the previous letter).","care-advice":"Personal care needs can be expressed clearly. A phrase is spoken only after your deliberate choice; no care or emergency alert is sent.","write-advice":"Undo an accidental entry with the Undo action, by touch or one-switch scanning. The action row also provides letter-only mode and Stop. Predictions never select themselves.","draft-label":"Your message (maximum 300 characters)","draft-count":"0 / 300 characters · Stored only for this browser session","suggestion-advice":"Local word suggestions for daily life and personal care. Tap or scan to insert a word. No automatic insertion or speech.","skip-explanation":"In row scanning, select “ABC →” to skip word suggestions and choose letters only. In letter mode, “Words on” brings predictions back.","word-examples":"Care-related vocabulary is available in the selected language. Only you decide what to insert or speak.","word-scan-help":"Select “Scan suggestions”. Scanning moves through the displayed words. Choose the highlighted word to insert it without speech.","keyboard-tip":"The final row offers Undo, letters only, show suggestions and Stop. Each action requires deliberate selection.","scan-overview":"The on-screen joystick stays visible below. Arrows move the highlight; only OK confirms. A compatible external joystick must send arrow keys and Enter. No EEG is connected.","joystick-tip":"Arrows only move the yellow selection. OK activates the selected action. Touch remains available.","scan-mode-help":"In writing mode, first choose a row, then a character. Each choice must be confirmed. After an insertion the scan can continue without speaking. Space on an external keyboard can control the scan.","scan-help":"Start the scan after choosing your input mode. “ABC →” skips suggestions; “Words on” restores them. Undo never speaks. Escape or “Stop scan” stops the scan.","mock-summary":"Simulated selection instead of EEG (technical test)","mock-explanation":"The button sends a manual test impulse to the selection interface. No brain signal is recorded or decoded.","privacy-summary":"Privacy and technical limitations","privacy-body":"This demo does not measure EEG, send messages or place emergency calls. Drafts and outputs stay in this browser tab’s memory and disappear on reload. MindSpeak does not transmit them to its own server. System speech services may process text depending on device settings. No predictive AI sends selections or communicates with the P300 research dataset.","footer-localized":"MindSpeak Connect 2.0 · Communication prototype · Not a certified medical device · No actual EEG control.","language-status":"English active. Care phrases, word suggestions and help texts are in English.","external-switch-status":"Not active. First switch press starts scanning; later presses confirm the highlighted choice.","draft-status":"Text is spoken only when you choose “Speak message”.","speech-title":"Last spoken phrase","scan-title":"Input and one-switch scanning","joystick-current":"Joystick not selected.","scan-phase":"Scanning","mock-result":"No test impulse yet.","live-status":"Choose an input mode and start.","last-message":"No phrase selected yet","care-joystick":"🕹️ Go to care phrases","speak-draft":"Speak message","clear-draft":"Delete message","undo-draft":"↶ Undo last entry","repeat":"Repeat","speech-toggle":"Speech: On","speech-stop":"Stop speech","scan-toggle":"Start scan","scan-choose":"Select highlighted item","auto-continue":"Continue scan after entry: On","letter-scan-toggle":"Scan letters only","word-scan-toggle":"Scan suggestions","mock-signal":"Send test impulse (not EEG)","hud-choose":"Select this item","hud-mock":"Test impulse (not EEG)","hud-stop":"Stop scan","external-switch-enable":"Enable switch input","method-switch":"One-switch scan (yellow highlight)","method-joystick":"Joystick simulation (arrows + OK)","method-touch":"Touch only","key-space":"Space","key-enter":"Enter","speed-1000":"1 second","speed-1500":"1.5 seconds","speed-2000":"2 seconds","speed-3000":"3 seconds","speed-4500":"4.5 seconds","round-1":"After 1 cycle","round-2":"After 2 cycles","round-3":"After 3 cycles","round-0":"No limit","speed-label":"Time per step","rounds-label":"Automatic stop"},"es":{"app-title":"Tus palabras. Tu decisión.","app-intro":"Elige frases rápidas o escribe tu mensaje tocando la pantalla o usando el barrido con un pulsador. No hay control cerebral ni EEG.","language-note":"Para evitar mezclar idiomas, termina o borra tu mensaje antes de cambiar el idioma. El cambio no activa la voz.","safety-notice":"Prototipo de investigación: No es un dispositivo certificado. «Necesito ayuda» no envía ninguna alarma de emergencia. No hay EEG ni P300 conectado.","input-method-label":"Selecciona el método de control","method-help":"Joystick: flechas y OK en pantalla. Pulsador externo: activa primero la prueba de teclado/HID. No se conecta ni detecta ningún dispositivo automáticamente.","external-title":"Pulsador externo · Prueba de teclado/HID","external-description":"Un pulsador compatible debe enviar Espacio o Intro como teclado (por Bluetooth o USB). Esta demo no puede verificar el dispositivo; el navegador debe recibir las pulsaciones.","external-key-label":"¿Qué tecla envía tu dispositivo?","external-safety":"Seguridad: Se ignoran teclas mantenidas, repeticiones y pulsaciones dentro de 650 ms. Solo funciona la tecla elegida. Escape o cambiar de aplicación desactiva el pulsador. Los campos de texto siguen protegidos.","focus-suggestion-note":"Resaltar una sugerencia tras cada letra (solo joystick; OK la inserta y ↓ vuelve a la letra anterior).","care-advice":"Puedes expresar tus necesidades íntimas con claridad. Solo se habla tras tu selección; no se envía ningún aviso de cuidado o emergencia.","write-advice":"Deshaz una entrada accidental con «Deshacer», por toque o barrido. La fila de acciones también permite solo letras y detener el barrido. Las sugerencias nunca se eligen solas.","draft-label":"Tu mensaje (máximo 300 caracteres)","draft-count":"0 / 300 caracteres · Solo durante esta sesión","suggestion-advice":"Sugerencias de palabras locales para la vida diaria y los cuidados. Toca o selecciona con el barrido; no se insertan ni se pronuncian automáticamente.","skip-explanation":"En el barrido por filas, elige «ABC →» para saltar sugerencias y escribir solo letras. «Activar palabras» restaura las sugerencias.","word-examples":"Hay vocabulario de cuidados en el idioma elegido. Solo tú decides qué insertar o decir.","word-scan-help":"Pulsa «Barrer sugerencias». El barrido recorre las palabras mostradas. Confirma la palabra resaltada para insertarla sin hablar.","keyboard-tip":"La última fila ofrece Deshacer, solo letras, mostrar sugerencias y Detener. Cada acción requiere confirmación.","scan-overview":"El joystick en pantalla permanece abajo. Las flechas mueven la selección y solo OK confirma. Un joystick externo debe enviar flechas e Intro. Sin EEG.","joystick-tip":"Las flechas solo mueven el resaltado amarillo. OK confirma. La pantalla táctil sigue disponible.","scan-mode-help":"En escritura, elige primero una fila y luego un carácter. Confirma cada elección. El barrido puede continuar tras insertar sin hablar. Espacio en un teclado externo puede controlarlo.","scan-help":"Inicia el barrido tras elegir el modo de entrada. «ABC →» omite sugerencias y «Activar palabras» las recupera. Deshacer no habla. Escape o «Detener barrido» lo detiene.","mock-summary":"Selección simulada en lugar de EEG (prueba técnica)","mock-explanation":"El botón envía un impulso de prueba manual a la interfaz. No se registra ni decodifica ninguna señal cerebral.","privacy-summary":"Privacidad y límites técnicos","privacy-body":"Esta demo no mide EEG, envía mensajes ni realiza llamadas de emergencia. Los textos permanecen en la memoria de esta pestaña y desaparecen al recargar. MindSpeak no los envía a su propio servidor. La voz del sistema puede procesarlos según la configuración del dispositivo. Ninguna IA predictiva realiza selecciones ni se conecta al conjunto de datos P300.","footer-localized":"MindSpeak Connect 2.0 · Prototipo de comunicación · No es un dispositivo médico certificado · Sin control EEG real.","language-status":"Español activo. Frases, sugerencias y ayudas en español.","external-switch-status":"Inactivo. La primera pulsación inicia el barrido y las siguientes confirman la opción resaltada.","draft-status":"El texto solo se pronuncia al elegir «Leer mensaje».","speech-title":"Última frase pronunciada","scan-title":"Entrada y barrido con un pulsador","joystick-current":"Joystick no seleccionado.","scan-phase":"Barrido activo","mock-result":"Aún no hay impulsos de prueba.","live-status":"Elige un modo de entrada para empezar.","last-message":"Todavía no se ha elegido ninguna frase","care-joystick":"🕹️ Ir a frases de cuidados","speak-draft":"Leer mensaje","clear-draft":"Borrar mensaje","undo-draft":"↶ Deshacer última entrada","repeat":"Repetir","speech-toggle":"Voz: Activada","speech-stop":"Detener voz","scan-toggle":"Iniciar barrido","scan-choose":"Elegir opción resaltada","auto-continue":"Continuar barrido tras escribir: Sí","letter-scan-toggle":"Barrer solo letras","word-scan-toggle":"Barrer sugerencias","mock-signal":"Enviar impulso de prueba (no EEG)","hud-choose":"Seleccionar esta opción","hud-mock":"Impulso de prueba (no EEG)","hud-stop":"Detener barrido","external-switch-enable":"Activar pulsador","method-switch":"Barrido con un pulsador (resaltado amarillo)","method-joystick":"Simulación de joystick (flechas + OK)","method-touch":"Solo pantalla táctil","key-space":"Espacio","key-enter":"Intro","speed-1000":"1 segundo","speed-1500":"1,5 segundos","speed-2000":"2 segundos","speed-3000":"3 segundos","speed-4500":"4,5 segundos","round-1":"Tras 1 vuelta","round-2":"Tras 2 vueltas","round-3":"Tras 3 vueltas","round-0":"Sin límite","speed-label":"Tiempo por paso","rounds-label":"Parada automática"},"fr":{"app-title":"Vos mots. Votre choix.","app-intro":"Choisissez une phrase rapide ou écrivez votre message par toucher ou balayage à un contacteur. Aucun EEG ni contrôle cérébral n’est connecté.","language-note":"Pour éviter de mélanger les langues, terminez ou effacez votre texte avant de changer de langue. Le changement ne déclenche jamais la voix.","safety-notice":"Prototype de recherche : Ce n’est pas une aide certifiée. « Aidez-moi » n’envoie aucune alerte d’urgence. Aucun EEG ni système P300 n’est connecté.","input-method-label":"Choisissez le mode de commande","method-help":"Joystick : flèches et OK à l’écran. Contacteur externe : activez d’abord le test clavier/HID. Aucun appareil n’est détecté ou connecté automatiquement.","external-title":"Contacteur externe · Test clavier/HID","external-description":"Un contacteur compatible doit envoyer Espace ou Entrée comme un clavier (Bluetooth ou USB). Cette démo ne vérifie pas la connexion matérielle ; le navigateur doit recevoir les frappes.","external-key-label":"Quelle touche envoie votre appareil ?","external-safety":"Sécurité : Les touches maintenues, répétitions et pressions dans les 650 ms sont ignorées. Seule la touche choisie fonctionne. Échap ou quitter l’application désactive le contacteur. Les champs de texte restent protégés.","focus-suggestion-note":"Surligner une suggestion après chaque lettre (joystick uniquement ; OK l’insère, ↓ revient à la dernière lettre).","care-advice":"Vous pouvez exprimer clairement vos besoins intimes. Une phrase n’est prononcée qu’après votre choix ; aucune alerte de soins ou d’urgence n’est envoyée.","write-advice":"Annulez une saisie accidentelle avec « Annuler », par toucher ou balayage. La rangée d’actions propose aussi lettres seules et arrêt du balayage. Aucune suggestion n’est sélectionnée automatiquement.","draft-label":"Votre message (300 caractères maximum)","draft-count":"0 / 300 caractères · Uniquement pendant cette session","suggestion-advice":"Suggestions de mots locales pour le quotidien et les soins. Touchez ou utilisez le balayage ; aucune insertion ni parole automatique.","skip-explanation":"Dans le balayage par rangées, choisissez « ABC → » pour ignorer les suggestions. « Mots activés » les rétablit.","word-examples":"Un vocabulaire de soins est disponible dans la langue choisie. Vous décidez seul quoi insérer ou dire.","word-scan-help":"Choisissez « Balayer les suggestions ». Le balayage parcourt les mots affichés. Confirmez le mot surligné pour l’insérer sans le prononcer.","keyboard-tip":"La dernière rangée propose Annuler, lettres seules, suggestions et Arrêter. Chaque action exige une validation.","scan-overview":"Le joystick à l’écran reste visible en bas. Les flèches déplacent la sélection et seul OK confirme. Un joystick externe doit envoyer les flèches et Entrée. Aucun EEG.","joystick-tip":"Les flèches déplacent seulement la sélection jaune. OK valide. Le toucher reste disponible.","scan-mode-help":"En écriture, choisissez d’abord une rangée puis un caractère. Confirmez chaque choix. Le balayage peut continuer sans parole. Espace sur un clavier externe peut le piloter.","scan-help":"Lancez le balayage après avoir choisi le mode d’entrée. « ABC → » ignore les suggestions et « Mots activés » les restaure. Annuler ne parle jamais. Échap ou « Arrêter » stoppe le balayage.","mock-summary":"Sélection simulée au lieu d’EEG (test technique)","mock-explanation":"Le bouton envoie une impulsion de test manuelle à l’interface. Aucun signal cérébral n’est enregistré ni décodé.","privacy-summary":"Confidentialité et limites techniques","privacy-body":"Cette démo ne mesure pas l’EEG, n’envoie pas de messages et ne passe aucun appel d’urgence. Les textes restent en mémoire dans cet onglet et disparaissent au rechargement. MindSpeak ne les transmet pas à son propre serveur. Les services vocaux du système peuvent traiter le texte selon les réglages de l’appareil. Aucune IA prédictive ne sélectionne de message ni ne se connecte aux données P300.","footer-localized":"MindSpeak Connect 2.0 · Prototype de communication · Pas un dispositif médical certifié · Aucun contrôle EEG réel.","language-status":"Français actif. Phrases, suggestions et aide en français.","external-switch-status":"Inactif. La première pression lance le balayage et les suivantes confirment le choix surligné.","draft-status":"Le texte n’est prononcé que si vous choisissez « Lire le message ».","speech-title":"Dernière phrase prononcée","scan-title":"Entrée et balayage avec contacteur","joystick-current":"Joystick non sélectionné.","scan-phase":"Balayage en cours","mock-result":"Aucune impulsion de test.","live-status":"Choisissez un mode d’entrée pour commencer.","last-message":"Aucune phrase sélectionnée","care-joystick":"🕹️ Accéder aux phrases de soins","speak-draft":"Lire le message","clear-draft":"Effacer le message","undo-draft":"↶ Annuler la dernière saisie","repeat":"Répéter","speech-toggle":"Voix : activée","speech-stop":"Arrêter la voix","scan-toggle":"Lancer le balayage","scan-choose":"Choisir l’élément surligné","auto-continue":"Continuer après saisie : oui","letter-scan-toggle":"Balayer les lettres seules","word-scan-toggle":"Balayer les suggestions","mock-signal":"Envoyer une impulsion de test (pas EEG)","hud-choose":"Choisir cet élément","hud-mock":"Impulsion de test (pas EEG)","hud-stop":"Arrêter le balayage","external-switch-enable":"Activer le contacteur","method-switch":"Balayage à un contacteur (sélection jaune)","method-joystick":"Simulation de joystick (flèches + OK)","method-touch":"Toucher uniquement","key-space":"Espace","key-enter":"Entrée","speed-1000":"1 seconde","speed-1500":"1,5 seconde","speed-2000":"2 secondes","speed-3000":"3 secondes","speed-4500":"4,5 secondes","round-1":"Après 1 tour","round-2":"Après 2 tours","round-3":"Après 3 tours","round-0":"Sans limite","speed-label":"Durée par étape","rounds-label":"Arrêt automatique"},"de":{"app-title":"Deine Worte. Deine Entscheidung.","app-intro":"Wähle schnelle Aussagen oder schreibe einen eigenen Satz – direkt durch Berührung oder mit einem Ein-Tasten-Scan. Kein EEG, keine echte Gehirnsteuerung.","language-note":"Wichtig: Um eine unbeabsichtigte Vermischung von Sprachen zu vermeiden, muss ein begonnener Satz vor dem Sprachwechsel gelöscht oder beendet werden. Die Auswahl startet keine Sprachausgabe.","safety-notice":"Forschungssimulation: Diese Website ist kein geprüftes Hilfsmittel. „Bitte helfen“ löst keinen Notruf aus. Eine P300-EEG-Erkennung oder medizinische Funktion ist nicht angeschlossen.","input-method-label":"Bedienungsart direkt hier auswählen","method-help":"Joystick: Pfeile und OK auf dem Bildschirm. Externer Ein-Taster: erst den Tastatur-/HID-Test aktivieren. Kein Gerät wird automatisch verbunden oder erkannt.","external-title":"Externer Ein-Taster · Tastatur/HID-Test","external-description":"Ein kompatibler Taster muss wie eine Tastatur Leertaste oder Enter senden (z. B. per Bluetooth oder USB-Adapter). Diese Demo kann keine Hardwareverbindung prüfen. Auf dem Smartphone muss der Browser die Tastendrücke erhalten.","external-key-label":"Welche Taste sendet dein Eingabegerät?","external-safety":"Sicherheit: Gehaltene Tasten, automatische Wiederholungen und Signale innerhalb von 650 ms nach einer akzeptierten Eingabe werden verworfen. Nur eine zuvor ausgewählte Taste gilt. ESC oder App-Wechsel deaktiviert die Tastereingabe. Texteingabefelder bleiben geschützt.","focus-suggestion-note":"Wortvorschläge nach jedem Buchstaben direkt markieren (Testfunktion, nur Joystick; erst OK fügt ein. ↓ zeigt den letzten Buchstaben, zum Beispiel „↓ B“, auch nach Wechsel zwischen Wortvorschlägen.)","care-advice":"Auch sensible Bedürfnisse dürfen klar und selbstbestimmt ausgesprochen werden. Jede Aussage wird erst nach bewusster Auswahl ausgegeben; ein automatischer Pflegeruf wird nicht gesendet.","write-advice":"Neu in 1.3: Ein Fehlklick lässt sich über „Rückgängig“ zurücknehmen – mit dem Ein-Tasten-Scan oder direkt per Knopf. Eine zusätzliche Steuerungsreihe enthält Rückgängig, ABC-Wechsel und Scan-Stopp. Wortvorhersagen bleiben verfügbar; die Umstellung ist freiwillig und wird niemals automatisch ausgelöst.","draft-label":"Dein Satz (maximal 300 Zeichen)","draft-count":"0 / 300 Zeichen · Nur auf diesem Gerät, für diese Sitzung","suggestion-advice":"Wortvorschläge 1.7 – auch für Pflege und Alltag, lokal und ohne Internet Durch Antippen oder Ein-Tasten-Scan einsetzen. Ein Wort wird nur auf Wunsch eingefügt.","skip-explanation":"Im normalen Reihenscan ist das erste Feld „ABC →“. Wähle dieses Feld mit dem Ein-Tasten-Scan, um ohne Vorschläge Buchstaben zu wählen. Im Buchstabenmodus heißt die letzte Taste „Wörter an“.","word-examples":"Neu: ZUR, AUF, DEM, MIT sowie STUHLGANG, WASCHEN, INTIMPFLEGE, EINLAGE, RASUR und weitere Pflegewörter. Du entscheidest weiterhin mit OK, was eingefügt oder ausgegeben wird.","word-scan-help":"Tippe auf „Wortvorschläge scannen“. Der Scan bewegt sich dann nur durch die angezeigten Wörter . Wenn dein Wort gelb markiert ist, tippe auf „Dieses Feld auswählen“. Es wird nur eingefügt, nicht gesprochen.","keyboard-tip":"Extra: Die letzte Reihe im kombinierten und im reinen Buchstabenscan heißt „Aktionen“ und bietet „Rückgängig“, „Nur ABC“, „Wörter an“ und „Scan stoppen“. Diese Aktionen werden ausschließlich auf bewusste Auswahl ausgeführt.","scan-overview":"Das kompakte Steuerkreuz bleibt unten sichtbar. Neu in 1.6: Nach einem über den Joystick eingegebenen Buchstaben wird bei passenden Ergänzungen optional direkt der erste gültige Wortvorschlag markiert. OK wählt ihn bewusst, ↓ führt zum letzten Buchstaben zurück. Außerdem gilt weiter: Wenn „Rückgängig“ von der ersten Wortvorschlagsposition direkt erreichbar ist, zeigt die obere Pfeiltaste sichtbar „↑ ↶“ an. Das ist nur ein Hinweis: Erst ↑ verschiebt die Markierung, und erst OK nimmt die Eingabe zurück. Ein externer Joystick muss Tastatur-Pfeile und Enter senden. Kein EEG angeschlossen.","joystick-tip":"Pfeile bewegen nur die gelbe Auswahl und springen am Rand auf die gegenüberliegende Seite. Erst OK löst die gewählte Aktion aus. Touch bleibt verfügbar.","scan-mode-help":"Im Schreibmodus sucht der Scan zunächst eine der sechs Reihen. Nach der Reihenauswahl sucht er eine Taste innerhalb dieser Reihe. Für jeden Schritt musst du ausdrücklich „Auswählen“ tippen. Wähle jetzt auch die erste Reihe mit Wortvorschlägen. Nach einer Wortergänzung oder einem Buchstaben läuft der Scan standardmäßig automatisch weiter, ohne selbst etwas auszuwählen oder zu sprechen. Auch Leertaste mit Tastaturfokus außerhalb von Bedienelementen funktioniert.","scan-help":"Wähle deinen Modus und starte den Scan. Die aktive Auswahl wird unten eingeblendet. Die erste Vorschlagsreihe enthält „ABC →“ zum Überspringen. Am Ende der Scanreihen ist zusätzlich die Steuerungsreihe mit „↶ Rückgängig“ und Wechsel-Tasten. Im Buchstabenmodus kann „Wörter an“ die Wortvorhersagen zurückholen. Ein Zurücknehmen spricht und sendet nichts. Escape oder „Scan stoppen“ beendet den Scan.","mock-summary":"Simulierte Auswahl statt EEG (Techniktest)","mock-explanation":"Die Taste sendet einen manuellen Testimpuls an unseren technischen Auswahl-Eingang. Ein echtes EEG-Signal wird dabei weder aufgenommen noch dekodiert.","privacy-summary":"Datenschutz und technische Grenzen","privacy-body":"Diese Demo führt keine EEG-Messung durch. Sie versendet keine Nachrichten und führt keine Notrufaktion aus. Entwürfe und gesprochene Aussagen liegen nur im Arbeitsspeicher der aktuellen Browserseite und werden beim Neuladen verworfen. Die Texte werden vom Demo-Code nicht auf einen MindSpeak-Server übertragen. Abhängig von den aktivierten Android-/Browserstimmen kann die Sprachausgabe über Dienste des Betriebssystems erfolgen. Es gibt weder ein Sprachmodell zur automatischen Auswahl noch eine Verbindung zum P300-Forschungsdatensatz.","footer-localized":"MindSpeak Connect 2.0 · Bedienungsprototyp · Keine medizinische Zweckbestimmung · Keine echte P300-/EEG-Steuerung.","language-status":"Deutsch aktiv. Pflege-Sätze und Wortvorschläge werden in der gewählten Sprache angeboten. Browser-Sprachstimmen müssen auf dem Gerät verfügbar sein.","external-switch-status":"Nicht aktiviert. Beim Test: ersten Tastendruck zum Starten des Scans, weitere Tastendrücke zur bewussten Auswahl.","draft-status":"Der Text wird erst nach „Satz vorlesen“ gesprochen.","speech-title":"Letzte gesprochene Aussage","scan-title":"Eingabeweg und Ein-Tasten-Scan","joystick-current":"Joystick noch nicht gewählt.","scan-phase":"Scan läuft","mock-result":"Noch kein Impuls.","live-status":"Wähle einen Kommunikationsmodus und beginne.","last-message":"Noch keine Aussage gewählt","care-joystick":"🕹️ Direkt zu den Pflege-Sätzen","speak-draft":"Satz vorlesen","clear-draft":"Satz löschen","undo-draft":"↶ Letzte Eingabe rückgängig","repeat":"Wiederholen","speech-toggle":"Sprachausgabe: An","speech-stop":"Vorlesen stoppen","scan-toggle":"Scan starten","scan-choose":"Aktuell Markiertes wählen","auto-continue":"Nach Zeichen/Wort weiterscannen: An","letter-scan-toggle":"Direkt Buchstaben scannen","word-scan-toggle":"Wortvorschläge scannen","mock-signal":"Test-Impuls senden (kein EEG)","hud-choose":"Dieses Feld auswählen","hud-mock":"Test-Impuls (kein EEG)","hud-stop":"Scan stoppen","external-switch-enable":"Tastereingabe aktivieren","method-switch":"Ein-Tasten-Scan (gelbe Markierung)","method-joystick":"Joystick-Simulation (Pfeile + OK)","method-touch":"Nur direkte Berührung","key-space":"Leertaste (Space)","key-enter":"Enter","speed-1000":"1 Sekunde","speed-1500":"1,5 Sekunden","speed-2000":"2 Sekunden","speed-3000":"3 Sekunden","speed-4500":"4,5 Sekunden","round-1":"Nach 1 Umlauf","round-2":"Nach 2 Umläufen","round-3":"Nach 3 Umläufen","round-0":"Ohne Zeitlimit","speed-label":"Zeit pro Schritt","rounds-label":"Automatischer Stopp"}};
+function translateFixed(lang){
+ // Fixed prose and accessible labels are restored even when returning to German.
+ const pack=I18N_FIXED[lang]||{};
+ for(const [id,val] of Object.entries(pack))$(id).textContent=val;
+ // The current selected language is always available in the select control.
+}
+
+const I18N_ARIA={
+ de:{phrases:'Alltägliche Aussagen auswählen',care:'Pflegeaussagen auswählen',suggestions:'Sechs mögliche Wortergänzungen',keyboard:'Bildschirmtastatur mit sechs Reihen',controls:'Scan-Steuerungsreihe',joy:'Joystick-Simulation',scan:'Aktive Scansteuerung',mode:'Kommunikationsmodus',switch:'Externer Ein-Taster per Bluetooth- oder USB-Tastatur',select:' auswählen',selected:'Wort '},
+ en:{phrases:'Choose an everyday phrase',care:'Choose a care phrase',suggestions:'Six possible word suggestions',keyboard:'On-screen keyboard with six rows',controls:'Scanning action row',joy:'Joystick simulation',scan:'Active scan controls',mode:'Communication mode',switch:'External single switch via Bluetooth or USB keyboard',select:' select',selected:'Word '},
+ es:{phrases:'Seleccionar frase cotidiana',care:'Seleccionar frase de cuidados',suggestions:'Seis sugerencias de palabras',keyboard:'Teclado en pantalla con seis filas',controls:'Fila de acciones del barrido',joy:'Simulación de joystick',scan:'Controles del barrido',mode:'Modo de comunicación',switch:'Pulsador externo por teclado Bluetooth o USB',select:' seleccionar',selected:'Palabra '},
+ fr:{phrases:'Choisir une phrase quotidienne',care:'Choisir une phrase de soins',suggestions:'Six suggestions de mots',keyboard:'Clavier à l’écran avec six rangées',controls:'Rangée de commandes du balayage',joy:'Simulation de joystick',scan:'Commandes du balayage',mode:'Mode de communication',switch:'Contacteur externe par clavier Bluetooth ou USB',select:' sélectionner',selected:'Mot '}
+};
+function updateLanguageControls(){
+ const L=I18N_ARIA[activeLanguage];
+ for(const [id,key] of [['phrases','phrases'],['care-phrases','care'],['suggestion-row','suggestions'],['keyboard','keyboard'],['control-row','controls'],['scan-hud','scan'],['external-switch-panel','switch']]){
+  $(id).setAttribute('aria-label',L[key]);
+ }
+ const inputGroup=$('mode-quick');
+ inputGroup.setAttribute('aria-label',LANG_UI[activeLanguage].quick);
+ $('joystick-demo').setAttribute('aria-label',L.joy);
+ phraseButtons.forEach((btn,i)=>btn.setAttribute('aria-label',PHRASES[i][1]+L.select));
+ keyboardButtons.forEach(({group,buttons},i)=>{
+  group.setAttribute('aria-label',(activeLanguage==='en'?'Row ':activeLanguage==='es'?'Fila ':activeLanguage==='fr'?'Rangée ':'Reihe ')+(i+1));
+  buttons.forEach((btn,j)=>{
+   const key=btn.dataset.languageKey||ROWS[i][j];
+   if(i===5&&j===4)btn.textContent=localizedMessage('Satz vorlesen');
+   if(i===5&&j===5)btn.textContent=localizedMessage(letterOnlyMode?'Wörter an':'Zurück');
+   btn.setAttribute('aria-label',key===' '?localizedMessage('Leerzeichen'):key==='⌫'?localizedMessage('Letztes Zeichen entfernen'):i===5&&j===4?localizedMessage('Satz vorlesen'):i===5&&j===5?localizedMessage(letterOnlyMode?'Wortvorschläge wieder einschalten':'Zurück zur Reihenauswahl.'):key);
+  });
+ });
+ controlButtons.forEach((btn,i)=>{btn.textContent=localizedMessage(ACTIONS[i]);btn.setAttribute('aria-label',btn.textContent);});
+ const field=$('draft');
+ field.setAttribute('placeholder',({
+  de:'Hier erscheint dein eigener Satz …',
+  en:'Your message appears here …',
+  es:'Tu mensaje aparece aquí …',
+  fr:'Votre message apparaît ici …'
+ })[activeLanguage]);
+ const methods=$('input-method');
+ methods.setAttribute('aria-label',({
+  de:'Bedienungsart auswählen',
+  en:'Choose an input method',
+  es:'Seleccionar método de control',
+  fr:'Choisir le mode de commande'
+ })[activeLanguage]);
+ const voiceOffLabel=localizedMessage('Sprachausgabe: Aus');
+ const voiceOnLabel=localizedMessage('Sprachausgabe: An');
+ speechToggle.textContent=speechEnabled?voiceOnLabel:voiceOffLabel;
+ externalSwitchToggle.textContent=localizedMessage(externalSwitchEnabled?'Tastereingabe deaktivieren':'Tastereingabe aktivieren');
+ scanToggle.textContent=localizedMessage(timer!==null?'Scan stoppen':'Scan starten');
+ wordScanToggle.textContent=localizedMessage(timer!==null&&scanKind==='suggestions'?'Wortscan stoppen':'Wortvorschläge scannen');
+ clearDraft.textContent=localizedMessage(clearArmed?'Wirklich alles löschen?':'Satz löschen');
+ letterScanToggle.textContent=localizedMessage(letterOnlyMode?'Wortvorschläge wieder einschalten':'Direkt Buchstaben scannen');
+ keyboardButtons[5].buttons[5].textContent=localizedMessage(letterOnlyMode?'Wörter an':'Zurück');
+ autoContinue.textContent=localizedMessage(autoContinueEnabled?'Nach Zeichen/Wort weiterscannen: An':'Nach Zeichen/Wort weiterscannen: Aus');
+ for(const b of suggestionButtons)b.setAttribute('aria-label',b.textContent==='–'?localizedMessage('Kein Vorschlag'):b.textContent==='ABC →'?'ABC →':I18N_ARIA[activeLanguage].selected+b.textContent);
+ if(externalSwitchEnabled){
+  externalSwitchStatus.textContent=({
+   de:'Tastereingabe aktiv. Taste loslassen vor erneutem Drücken.',
+   en:'Switch input active. Release the key before pressing again.',
+   es:'Pulsador activo. Suelta la tecla antes de volver a pulsar.',
+   fr:'Contacteur actif. Relâchez la touche avant d’appuyer à nouveau.'
+  })[activeLanguage];
+ }
+}
+
+const languageSelect=$('language-select'),languageStatus=$('language-status');
+languageSelect.value='de';
+function setLanguage(requested){
+ if(!['de','en','es','fr','tr','ar'].includes(requested)||requested===activeLanguage){
+  languageSelect.value=activeLanguage;return;
+ }
+ if(composer.text.length>0){
+  languageSelect.value=activeLanguage;
+  languageStatus.textContent=LANG_UI[activeLanguage].locked;
+  return;
+ }
+ if(timer!==null)stopScan('Scan vor Sprachwechsel beendet.');
+ if('speechSynthesis' in window)window.speechSynthesis.cancel();
+ activeLanguage=requested;languageSelect.value=requested;
+ if(document.documentElement){document.documentElement.lang=requested;document.documentElement.dir=requested==='ar'?'rtl':'ltr';}
+ for(const id of ['draft','last-message','scan-current','joystick-current'])$(id).setAttribute('dir',requested==='ar'?'rtl':'ltr');
+ const all=LANGUAGE_PACKS[requested]?[...LANGUAGE_PACKS[requested].general,...LANGUAGE_PACKS[requested].care]:DE_PHRASES;
+ PHRASES.forEach((entry,i)=>{
+  entry[1]=all[i];
+  const button=phraseButtons[i];button.children[1].textContent=all[i];
+  button.setAttribute('aria-label',all[i]+I18N_ARIA[requested].select);
+ });
+ const layout=localizedKeyboardRows();
+ keyboardButtons.forEach(({buttons},i=>{
+  if(i===5)return;
+  buttons.forEach((btn,j)=>{
+   const char=layout[i][j];
+   btn.dataset.languageKey=char;
+   btn.textContent=char;
+   btn.setAttribute('aria-label',char);
+  });
+ });
+ const ui=LANG_UI[requested];
+ for(const [id,key] of [['mode-title','modeTitle'],['mode-quick','quick'],['mode-write','write'],['quick-title','quickTitle'],['care-title','careTitle'],['write-title','writeTitle'],['top-care-joystick','careBtn'],['top-care-switch','careScan'],['quick-joystick','writeJoy']]){
+  $(id).textContent=ui[key];
+ }
+ translateFixed(requested);
+ languageStatus.textContent=I18N_FIXED[requested]?.['language-status']||ui.status;
+ // Keep even the now-hidden scan readout in the selected language.
+ scanCurrent.textContent=localizedMessage(PHRASES[GENERAL_PHRASES.length][1]);
+ last='';lastMessage.textContent='';repeat.disabled=true;
+ savedLetterTarget=null;scanIndex=0;navRow=0;navCol=0;editHistory.length=0;
+ refreshSuggestions();render();paintNav();updateLanguageControls();
+ status.textContent=I18N_FIXED[requested]['live-status'];
+}
+languageSelect.addEventListener('change',()=>setLanguage(languageSelect.value));
+inputMethod.addEventListener('change',()=>chooseInputMethod(inputMethod.value));
+function startCareOnlyScan(){
+  if(timer!==null)stopScan('Pflege-Scan neu gestartet.');
+  if(inputMode!=='switch')chooseInputMethod('switch');
+  setMode('quick');
+  startScan('keyboard');
+  careOnlyScan=true;scanIndex=GENERAL_PHRASES.length;cycles=0;render();
+  status.textContent=localizedMessage('Pflege-Scan läuft: Nur 17 Pflegeaussagen werden markiert. Auswahl mit einem externen Taster oder „Dieses Feld auswählen“.');
+}
+$('top-care-switch').addEventListener('click',startCareOnlyScan);
+function jumpToCarePhrases(){
+  // Directly target the first care phrase, also when already in quick mode.
+  setMode('quick');
+  chooseInputMethod('joystick');
+  navRow=GENERAL_PHRASES.length/2;navCol=0;
+  paintNav(true);
+  status.textContent=localizedMessage('Pflege-Schnellaussagen: Pfeile bewegen, OK spricht nur die gewählte Aussage.');
+}
+$('care-joystick').addEventListener('click',jumpToCarePhrases);
+$('top-care-joystick').addEventListener('click',jumpToCarePhrases);
+$('quick-joystick').addEventListener('click',()=>{
+  // One deliberate action opens writing with the same joystick and Undo logic.
+  // The selected word is brought into view, rather than making the user scroll
+  // to a selector located below the whole writing keyboard.
+  setMode('write');
+  chooseInputMethod('joystick');
+  paintNav(true);
+});
+[['joy-up','up'],['joy-down','down'],['joy-left','left'],['joy-right','right'],['joy-confirm','ok']]
+.forEach(([id,action])=>$(id).addEventListener('click',()=>joystick(action)));
+function sendMock(){
+ window.dispatchEvent(new CustomEvent('mindspeak:selection-signal',{detail:{
+  type:'select',confidence:.95,timestampMs:performance.now(),source:'simulated'
+ }}));
+}
+$('mock-signal').addEventListener('click',sendMock);
+$('hud-mock').addEventListener('click',sendMock);
+function isEditableTarget(el){
+ return el instanceof Element&&Boolean(el.closest('textarea, select, input, [contenteditable]'));
+}
+function isAssignedSwitchKey(event){
+ return externalSwitchKey.value==='Space'?event.code==='Space'||event.key===' ':event.key==='Enter';
+}
+document.addEventListener('keydown',event=>{
+ if(event.altKey||event.ctrlKey||event.metaKey)return;
+ if(event.key==='Escape'){
+  if(timer!==null)stopScan('Scan mit Escape gestoppt.');
+  if(externalSwitchEnabled)disableExternalSwitch('ESC: Tastereingabe und Scan deaktiviert.');
+  return;
+ }
+ const el=event.target;
+ if(externalSwitchEnabled&&inputMode==='switch'&&isAssignedSwitchKey(event)&&!isEditableTarget(el)){
+  // Intercept browser click on focused buttons too; prevents a hardware switch
+  // from accidentally activating another HTML button via Space/Enter defaults.
+  event.preventDefault();
+  if(document.hidden)return;
+  if(event.repeat)return;
+  const verdict=keyGate.press(performance.now());
+  if(!verdict.accepted){
+   updateSwitchStatus('Tastereingabe ignoriert: '+verdict.reason+'.');
+   return;
+  }
+  switchAcceptCount++;
+  if(timer===null)startScan();
+  else selectCurrent('Externer Ein-Taster');
+  updateSwitchStatus('Tasterimpuls '+switchAcceptCount+' erkannt: '+(timer===null?'Scan beendet; nächster Impuls startet erneut.':'Scan läuft; nur gezielte Auswahl wird ausgeführt.')+' Taste loslassen vor erneutem Drücken.');
+  return;
+ }
+ if(event.repeat||isEditableTarget(el))return;
+ if(el instanceof Element&&el.closest('button'))return;
+ if(inputMode==='joystick'){
+  const move={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Enter:'ok'}[event.key];
+  if(move){event.preventDefault();joystick(move);}
+  return;
+ }
+ if(inputMode==='switch'&&!externalSwitchEnabled&&event.code==='Space'){
+  event.preventDefault();timer!==null?selectCurrent('Leertaste (Simulation)'):startScan();
+ }
+});
+document.addEventListener('keyup',event=>{
+ if(externalSwitchEnabled&&inputMode==='switch'&&isAssignedSwitchKey(event)){
+  // Prevent default Space keyup click on a previously focused button.
+  if(!isEditableTarget(event.target))event.preventDefault();
+  keyGate.release();
+ }
+});
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden)return;
+ if(timer!==null)stopScan('Scan beim App-Wechsel sicherheitshalber gestoppt.');
+ if(externalSwitchEnabled)disableExternalSwitch('App-Wechsel: Tastereingabe aus Sicherheitsgründen deaktiviert.');
+});
+displayDraft();render();paintNav();
+})();
+</script>
+</body>
+</html>
